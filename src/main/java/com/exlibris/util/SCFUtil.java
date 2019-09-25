@@ -233,6 +233,7 @@ public class SCFUtil {
         instItem.getJSONObject("item_data").put("location", scfItemData.get("location"));
         instItem.getJSONObject("item_data").remove("policy");
         instItem.getJSONObject("item_data").put("storage_location_id", scfItemData.get("storage_location_id"));
+        instItem.getJSONObject("item_data").put("internal_note_1", scfItemData.get("internal_note_1"));
         instItem.put("holding_data", scfItem.get("holding_data"));
         instItem.put("bib_data", scfItem.get("bib_data"));
 
