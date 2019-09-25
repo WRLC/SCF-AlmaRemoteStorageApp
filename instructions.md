@@ -35,12 +35,12 @@ Access to the Developer network for all member institutions, including the remot
 5. Remove .git folder
 6. The file conf.json should include confidential information, so we'll not upload it to Heroku. Move `conf.json` out to the FTP server, under main-folder and update the relevant values: Gateway url, API-keys etc.
 7. Commit to Git: `git init` , `git add .` , `git commit -m "Ready to deploy"`
-8. Create the heroku app `heroku create “<app-name>“`
+8. Create the heroku app `heroku create “app-name“`
 9. Add conf.json path to the [Config Vars](https://devcenter.heroku.com/articles/config-vars#using-the-heroku-dashboard) when Key=CONFIG_FILE and Value=ftp://user:password@server/path/to/conf.json
 10. Deploy your code `git push heroku master`. The application is now deployed. Ensure that at least one instance of the app is running: `heroku ps:scale web=1`
 11. Congratulations! Your web app should now be up and running on Heroku. If you like to test it from your browser, open it with: `heroku open`
 12. The URL that now opened in your browser is the URL you need to configre in the Webhook integration profile.
-13. When configuring the Webhook profile, press on "Activate". This will call the "challenge" URL: https://<alma-remote-storage-app>.herokuapp.com/webhook?challenge=123
+13. When configuring the Webhook profile, press on "Activate". This will call the "challenge" URL: https://alma-remote-storage-app.herokuapp.com/webhook?challenge=123
 
 ## Maintaining historic log files
 Heroku doesn't keep log files above 1500 lines. For troublshooting we added support for uploading log files to the FTP.
@@ -54,7 +54,7 @@ See others tricks [here](https://quickleft.com/blog/6-easy-ways-to-prevent-your-
 @echo OFF
 :REPEAT
 @echo. %date% at %time% >>CurlLogs.txt
-curl  “https://<alma-remote-storage-app>.herokuapp.com“
+curl  “https://alma-remote-storage-app.herokuapp.com“
 timeout /t 1800 /nobreak > NUL
 goto REPEAT
 ```
