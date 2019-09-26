@@ -167,13 +167,12 @@ public class SCFUtil {
             }
         }
         HttpResponse itemResponce = ItemApi.retrieveItem(itemData.getBarcode(), baseUrl, institutionApiKey);
-        JSONObject jsonItemObject = new JSONObject(itemResponce.getBody());
         if (itemResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.warn("Can't get institution : " + itemData.getInstitution() + " item. Barcode : "
                     + itemData.getBarcode());
             return null;
         }
-        return jsonItemObject;
+        return new JSONObject(itemResponce.getBody());
     }
 
     public static JSONObject createSCFItem(ItemData itemData, String mmsId, String holdingId) {
@@ -195,8 +194,8 @@ public class SCFUtil {
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
         String baseUrl = props.get("gateway").toString();
-        String body = instItem.toString();
-        HttpResponse itemResponse = ItemApi.createItem(mmsId, holdingId, baseUrl, remoteStorageApikey, body);
+        HttpResponse itemResponse = ItemApi.createItem(mmsId, holdingId, baseUrl, remoteStorageApikey,
+                instItem.toString());
         if (itemResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.warn("Can't create SCF item. Barcode : " + itemData.getBarcode());
         }
@@ -232,6 +231,9 @@ public class SCFUtil {
         instItem.getJSONObject("item_data").put("library", scfItemData.get("library"));
         instItem.getJSONObject("item_data").put("location", scfItemData.get("location"));
         instItem.getJSONObject("item_data").remove("policy");
+        instItem.getJSONObject("item_data").put("alternative_call_number", scfItemData.get("alternative_call_number"));
+        instItem.getJSONObject("item_data").put("alternative_call_number_type",
+                scfItemData.get("alternative_call_number_type"));
         instItem.getJSONObject("item_data").put("storage_location_id", scfItemData.get("storage_location_id"));
         instItem.getJSONObject("item_data").put("internal_note_1", scfItemData.get("internal_note_1"));
         instItem.put("holding_data", scfItem.get("holding_data"));
