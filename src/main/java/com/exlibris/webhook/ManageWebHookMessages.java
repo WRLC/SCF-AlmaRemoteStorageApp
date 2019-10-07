@@ -95,8 +95,8 @@ public class ManageWebHookMessages {
         }
         logger.info("Request source institution is :" + institution + ". userId: " + userId);
         String barcode = webhookMessage.getJSONObject("item_loan").getString("item_barcode");
-        if (barcode.startsWith("X")) {
-            barcode = barcode.substring(1);
+        if (barcode.endsWith("X")) {
+            barcode = barcode.substring(0, barcode.length() - 1);
         }
         ItemData itemData = new ItemData(barcode, institution, null, null,
                 webhookMessage.getJSONObject("item_loan").getString("mms_id"));
