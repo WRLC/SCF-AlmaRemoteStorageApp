@@ -81,7 +81,7 @@ public class SCFUtil {
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
         String baseUrl = props.get("gateway").toString();
-        HttpResponse itemResponce = ItemApi.retrieveItem("X" + itemData.getBarcode(), baseUrl, remoteStorageApikey);
+        HttpResponse itemResponce = ItemApi.retrieveItem(itemData.getBarcode() + "X", baseUrl, remoteStorageApikey);
         JSONObject jsonItemObject = new JSONObject(itemResponce.getBody());
         if (itemResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.debug("No items found . Barcode : " + itemData.getBarcode());
@@ -178,7 +178,7 @@ public class SCFUtil {
     public static JSONObject createSCFItem(ItemData itemData, String mmsId, String holdingId) {
         logger.debug("create SCF Item. Barcode : " + itemData.getBarcode());
         JSONObject instItem = getINSItem(itemData);
-        instItem.getJSONObject("item_data").put("barcode", "X" + itemData.getBarcode());
+        instItem.getJSONObject("item_data").put("barcode", itemData.getBarcode() + "X");
         JSONObject provenance = new JSONObject();
         provenance.put("value", itemData.getInstitution());
         instItem.getJSONObject("item_data").put("provenance", provenance);
@@ -225,7 +225,7 @@ public class SCFUtil {
         JSONObject instItem = getINSItem(itemData);
         JSONObject scfItemData = scfItem.getJSONObject("item_data");
         instItem.getJSONObject("item_data").put("pid", scfItemData.getString("pid"));
-        instItem.getJSONObject("item_data").put("barcode", "X" + itemData.getBarcode());
+        instItem.getJSONObject("item_data").put("barcode", itemData.getBarcode() + "X");
         instItem.getJSONObject("item_data").put("provenance", scfItemData.get("provenance"));
         instItem.getJSONObject("item_data").remove("po_line");
         instItem.getJSONObject("item_data").put("library", scfItemData.get("library"));
