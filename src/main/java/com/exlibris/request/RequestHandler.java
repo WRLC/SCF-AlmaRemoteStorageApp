@@ -17,7 +17,7 @@ public class RequestHandler {
         if (jsonItemObject != null) {
             SCFUtil.createSCFRequest(jsonItemObject, requestData);
         } else {
-            logger.warn("Create Request Failed. Barcode: X" + requestData.getBarcode() + "Does not exist in SCF");
+            logger.warn("Create Request Failed. Barcode: " + requestData.getBarcode() + "X Does not exist in SCF");
         }
 
     }
