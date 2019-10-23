@@ -7,14 +7,15 @@ Access to the Developer network for all member institutions, including the remot
 ### On all Institutions:
 1. FTP connection configuration - To share files between the App and Alma with a  [sub-directory](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/050Administration/050Configuring_General_Alma_Functions/050External_Systems#UpdateSubmissionFormatFtp) for each institutions (the dir name should include the inst code. e.g. main_folder/01AAA_ABC).
 2. API-key with r/w permission for the Bibs area
-3. Publishing Profile - To handle items synchronization
-    - Create a [set](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/050Administration/070Managing_Jobs/060Managing_Search_Queries_and_Sets#sets.setDetail) which contains all items that are located in the remote storage location.
-    - Create an Items [publishing profile job](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/090Integrations_with_External_Systems/030Resource_Management/080Publishing_and_Inventory_Enrichment) with the above set. Publishing protocol should be FTP and sub-directory is "items". Compressed file extension: tar.gz
-4. Remote Storage Facility - To export all requests to remote storage
+3. Remote Storage Facility - To export all requests to remote storage
     - Create a [integration profile](https://developers.exlibrisgroup.com/alma/integrations/remote_storage/xml_based/)  of “remote storage” type. “Export File Path“ is "requests".
     - Create a [Remote Storage](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/030Fulfillment/080Configuring_Fulfillment/040Configuring_Remote_Storage_Facilities) conected to your integration profile.
     - Edit [Physical Location](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/030Fulfillment/080Configuring_Fulfillment/030Configuring_Physical_Locations) - Type is : Remote Storage , Remote Storage is the remote storage facility you created.
     - Find the job ID that should be used for submitting the job and add it to the app configuration. You can use this API: /almaws/v1/conf/jobs?type=SCHEDULED&limit=100 search for the integration profile name and get the id.
+4. Publishing Profile - To handle items synchronization
+    - Create a [set](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/050Administration/070Managing_Jobs/060Managing_Search_Queries_and_Sets#sets.setDetail) which contains all items that are located in the remote storage location.
+    - Create an Items [publishing profile job](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/090Integrations_with_External_Systems/030Resource_Management/080Publishing_and_Inventory_Enrichment) with the above set. Publishing protocol should be FTP and sub-directory is "items". Compressed file extension: tar.gz
+    - The Job sould contain the Phisical items Enrichment With the following: Repeatable field is ITM ,Barcode subfield:b,Current library subfield:c,Current location subfield:l
 5.  [Webhooks](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/090Integrations_with_External_Systems/030Resource_Management/300Webhooks)
     - Create a Webhooks Integration Profile. Message type should be JSON and under Subscriptions Select `Job Finish` to send a webhook when an Alma Job is done. Webhook listener URL will be the url after deploying the app following forward slash and "webhook". E.g.:  https://alma-remote-storage-app.herokuapp.com/webhook
 
@@ -37,6 +38,7 @@ Access to the Developer network for all member institutions, including the remot
 7. Commit to Git: `git init` , `git add .` , `git commit -m "Ready to deploy"`
 8. Create the heroku app `heroku create “app-name“`
 9. Add conf.json path to the [Config Vars](https://devcenter.heroku.com/articles/config-vars#using-the-heroku-dashboard) when Key=CONFIG_FILE and Value=ftp://user:password@server/path/to/conf.json
+if you are using your own server then you can copy the conf.json file into the src/main/resources folder
 10. Deploy your code `git push heroku master`. The application is now deployed. Ensure that at least one instance of the app is running: `heroku ps:scale web=1`
 11. Congratulations! Your web app should now be up and running on Heroku. If you like to test it from your browser, open it with: `heroku open`
 12. The URL that now opened in your browser is the URL you need to configre in the Webhook integration profile.
