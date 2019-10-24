@@ -17,6 +17,7 @@ import com.exlibris.restapis.BibApi;
 import com.exlibris.restapis.HoldingApi;
 import com.exlibris.restapis.HttpResponse;
 import com.exlibris.restapis.ItemApi;
+import com.exlibris.restapis.LoanApi;
 import com.exlibris.restapis.RequestApi;
 
 public class SCFUtil {
@@ -175,6 +176,11 @@ public class SCFUtil {
         return new JSONObject(itemResponce.getBody());
     }
 
+    public static String createSCFItemAndGetId(ItemData itemData, String mmsId, String holdingId) {
+        JSONObject jsonItemObject = createSCFItem(itemData, mmsId, holdingId);
+        return jsonItemObject.getJSONObject("item_data").getString("pid");
+    }
+
     public static JSONObject createSCFItem(ItemData itemData, String mmsId, String holdingId) {
         logger.debug("create SCF Item. Barcode : " + itemData.getBarcode());
         JSONObject instItem = getINSItem(itemData);
@@ -203,8 +209,7 @@ public class SCFUtil {
     }
 
     public static boolean deleteSCFItem(JSONObject jsonItemObject) {
-        logger.debug("delete SCF Item. Barcode: "
-                + jsonItemObject.getJSONObject("item_data").getString("barcode"));
+        logger.debug("delete SCF Item. Barcode: " + jsonItemObject.getJSONObject("item_data").getString("barcode"));
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
         String baseUrl = props.get("gateway").toString();
@@ -254,7 +259,6 @@ public class SCFUtil {
 
     }
 
-
     public static JSONObject getINSBib(ItemData itemData) {
         logger.debug("get institution : " + itemData.getInstitution() + "Bib. Mms Id : " + itemData.getMmsId());
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
@@ -267,8 +271,7 @@ public class SCFUtil {
                 break;
             }
         }
-        HttpResponse itemResponce = BibApi.getBib(itemData.getMmsId(), "full", "None", baseUrl,
-                institutionApiKey);
+        HttpResponse itemResponce = BibApi.getBib(itemData.getMmsId(), "full", "None", baseUrl, institutionApiKey);
         JSONObject jsonItemObject = new JSONObject(itemResponce.getBody());
         if (itemResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.warn("Can't get institution : " + itemData.getInstitution() + " Bib. MMS Id : "
@@ -363,7 +366,6 @@ public class SCFUtil {
         String holdingId = jsonItemObject.getJSONObject("holding_data").getString("holding_id");
         String itemPid = jsonItemObject.getJSONObject("item_data").getString("pid");
 
-
         HttpResponse itemResponce = ItemApi.scanIn(mmsId, holdingId, itemPid, "scan", baseUrl, library, circ_desk,
                 institutionApiKey);
 
@@ -376,4 +378,29 @@ public class SCFUtil {
         }
 
     }
+
+    public static void createSCFLoan(ItemData itemData, String itemPid) {
+
+        logger.debug("create SCF Loan. Item Pid: " + itemPid);
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String remoteStorageApikey = props.get("remote_storage_apikey").toString();
+        String baseUrl = props.get("gateway").toString();
+        String loanCircDesc = props.get("remote_storage_holding_circ_desc").toString();
+        String loanLibrary = props.get("remote_storage_holding_library").toString();
+        String userId = getUserIdByIns(itemData);
+        JSONObject jsonLoan = new JSONObject();
+        JSONObject jsonCircDesk = new JSONObject();
+        jsonCircDesk.put("value", loanCircDesc);
+        jsonLoan.put("circ_desk", jsonCircDesk);
+        JSONObject jsonLibrary = new JSONObject();
+        jsonLibrary.put("value", loanLibrary);
+        jsonLoan.put("library", jsonLibrary);
+
+        HttpResponse requestResponse = LoanApi.createLoan(userId, itemPid, baseUrl, remoteStorageApikey,
+                jsonLoan.toString());
+        if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
+            logger.warn("Can't create SCF loan. Item Pid : " + itemPid);
+        }
+    }
+
 }
