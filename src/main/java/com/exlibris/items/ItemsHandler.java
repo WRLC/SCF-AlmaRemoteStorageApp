@@ -9,7 +9,6 @@ public class ItemsHandler {
 
     final private static Logger logger = Logger.getLogger(ItemsHandler.class);
 
-
     public static void itemUpdated(ItemData itemData) {
         logger.info("New/Update Item. Barcode: " + itemData.getBarcode());
 
@@ -45,7 +44,10 @@ public class ItemsHandler {
                     }
                 }
                 logger.debug("Creating Item Based SCF on mmsId and holdingId");
-                SCFUtil.createSCFItem(itemData, mmsId, holdingId);
+                String itemPid = SCFUtil.createSCFItemAndGetId(itemData, mmsId, holdingId);
+                logger.debug("Loan the new Item who was created");
+                SCFUtil.createSCFLoan(itemData, itemPid);
+
             }
         } else {
             logger.debug("The item exists in the remote Storage");
