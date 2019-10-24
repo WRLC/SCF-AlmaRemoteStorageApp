@@ -385,7 +385,7 @@ public class SCFUtil {
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
         String baseUrl = props.get("gateway").toString();
-        String loanCircDesc = props.get("remote_storage_holding_circ_desc").toString();
+        String loanCircDesc = props.get("remote_storage_circ_desc").toString();
         String loanLibrary = props.get("remote_storage_holding_library").toString();
         String userId = getUserIdByIns(itemData);
         JSONObject jsonLoan = new JSONObject();
