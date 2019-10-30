@@ -21,7 +21,7 @@ Access to the Developer network for all member institutions, including the remot
 
 
 ### On the Remote Storage Institution:
-1. Create a patrons for each Institution/Library. For example if the Institution code is 01AAA_ABC and the library code is RS, the user's Primary identifier will be 01AAA_ABC-RS
+1. Create a patrons for each Institution/Library. For example if the Institution code is 01AAA_ABC and the library code is RS, the user's Primary identifier will be 01AAA_ABC-RS. (user should have a home address.)
 2. Define [provenance code](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/040Resource_Management/080Configuring_Resource_Management/080Configuring_Provenance_Codes) for each institution code.
 3. Add personal-delivery for all items' [terms of use](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/030Fulfillment/080Configuring_Fulfillment/050Physical_Fulfillment#fulfillment.tou.termsOfUseManagement)
 4. Create a [Webhooks](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/090Integrations_with_External_Systems/030Resource_Management/300Webhooks) Integration Profile. Where the Message type is JSON and Under Subscriptions select `Loans`. Webhook listener URL will be (same as above) the url after deploying the app following forward slash and "webhook". E.g.:  https://alma-remote-storage-app.herokuapp.com/webhook
