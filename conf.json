@@ -1,27 +1,17 @@
 {
 	"gateway": "https://api-na.hosted.exlibrisgroup.com",
-	"remote_storage_inst": "01AAA_RS",
-	"remote_storage_apikey": "l8xx...",
 	"ftp_server": {
 					"host": "my.ftp.server",
 					"user": "user",
 					"password": "xxx",
 					"main_folder":"the_main_folder"
 				},
+	"remote_storage_inst": "01AAA_RS",
+	"remote_storage_apikey": "l8xx...",
 	"remote_storage_holding_library":"RS",
 	"remote_storage_holding_location":"rs_shared",
 	"remote_storage_circ_desc":"DEFAULT_CIRC_DESK",
 	"institutions": [
-		{
-			"code": "01AAA_RS",
-			"apikey": "l7xx...",
-			"libraries": [
-				{
-					"code": "RS",
-					"remote_storage_location": ["rs_shared"]
-				}
-			]
-		},
 		{
 			"code": "01AAA_AB",
 			"apikey": "l8xx...",
