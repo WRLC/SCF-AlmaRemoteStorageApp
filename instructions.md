@@ -18,6 +18,7 @@ Access to the Developer Network for all member institutions, including the remot
     - The Job should contain the physical items enrichment with the following: Repeatable field is ITM ,Barcode subfield:b,Current library subfield:c,Current location subfield:l
     - Take the Profile Id from the UI and use it with this API: /almaws/v1/conf/jobs?profile_id={ID}. Write that ID in conf.json under publishing_job_id.
     - Important note: Any change to the publishing/integration profile might change the related job ID.
+    - When running the Item Publishing for the first time, all existing items will be published, and therefore we need to make sure that the App is turned off, so it will not process all the items.
 5.  [Webhooks](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/090Integrations_with_External_Systems/030Resource_Management/300Webhooks)
     - Create a Webhooks Integration Profile. Message type should be JSON and under Subscriptions Select `Job Finish` to send a webhook when an Alma Job is done. Webhook listener URL will be the url after deploying the app following forward slash and "webhook". E.g.:  https://alma-remote-storage-app.herokuapp.com/webhook
 
