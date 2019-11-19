@@ -23,7 +23,7 @@ import com.exlibris.restapis.RequestApi;
 public class SCFUtil {
 
     final private static Logger logger = Logger.getLogger(SCFUtil.class);
-    final private static String HOL_XML_TEMPLATE = "<holding><record><datafield ind1=\"0\" ind2=\" \" tag=\"852\"><subfield code=\"b\">_LIB_CODE_</subfield><subfield code=\"c\">_LOC_CODE_</subfield></datafield></record><suppress_from_publishing>true</suppress_from_publishing></holding>";
+    final private static String HOL_XML_TEMPLATE = "<holding><record><datafield ind1=\"0\" ind2=\" \" tag=\"852\"><subfield code=\"b\">_LIB_CODE_</subfield><subfield code=\"c\">_LOC_CODE_</subfield></datafield></record><suppress_from_publishing>false</suppress_from_publishing></holding>";
 
     public static String getSCFHoldingFromRecordAVA(String record) {
         try {
@@ -134,11 +134,10 @@ public class SCFUtil {
     }
 
     public static String createSCFHoldingAndGetId(JSONObject jsonBibObject, String mmsId) {
-        JSONObject jsonHoldingObject = createSCFHolding(jsonBibObject, mmsId);
-        return jsonHoldingObject.getString("holding_id");
+        return createSCFHolding(jsonBibObject, mmsId);
     }
 
-    private static JSONObject createSCFHolding(JSONObject jsonBibObject, String mmsId) {
+    private static String createSCFHolding(JSONObject jsonBibObject, String mmsId) {
         logger.debug("create SCF Holding. MMS ID : " + mmsId);
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
@@ -152,7 +151,7 @@ public class SCFUtil {
             logger.warn("Can't create SCF holding. MMS ID : " + mmsId);
             return null;
         }
-        return jsonHoldingObject;
+        return jsonHoldingObject.getString("holding_id");
     }
 
     public static JSONObject getINSItem(ItemData itemData) {
@@ -366,7 +365,7 @@ public class SCFUtil {
         String holdingId = jsonItemObject.getJSONObject("holding_data").getString("holding_id");
         String itemPid = jsonItemObject.getJSONObject("item_data").getString("pid");
 
-        HttpResponse itemResponce = ItemApi.scanIn(mmsId, holdingId, itemPid, "scan", baseUrl, library, circ_desk,
+        HttpResponse itemResponce = ItemApi.scanIn(mmsId, holdingId, itemPid, "scan", baseUrl, library, circ_desk, "true", 
                 institutionApiKey);
 
         if (itemResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
