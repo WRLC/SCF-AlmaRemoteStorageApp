@@ -55,12 +55,12 @@ public class ItemApi {
     }
 
     public static HttpResponse scanIn(String mmsId, String holdingId, String itemPid, String op, String baseUrl,
-            String library, String circDesk, String apiKey) {
+            String library, String circDesk, String done, String apiKey) {
         logger.info("Starting to handle Scan In Item: " + itemPid + ".");
         logger.info("Item Mms Id: " + mmsId + " Item Holding Id: " + holdingId + "- calling POST");
 
         String url = baseUrl + "/almaws/v1/bibs/" + mmsId + "/holdings/" + holdingId + "/items/" + itemPid + "?op="
-                + op + "&library=" + library + "&circ_desk=" + circDesk + "&apikey=" + apiKey;
+                + op + "&library=" + library + "&circ_desk=" + circDesk+ "&done=" + done + "&apikey=" + apiKey;
         HttpResponse itemResponse = AlmaRestUtil.sendHttpReq(url, "POST", null);
 
         return itemResponse;
