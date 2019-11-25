@@ -4,7 +4,8 @@
 					"host": "my.ftp.server",
 					"user": "user",
 					"password": "xxx",
-					"main_folder":"the_main_folder"
+					"main_folder":"the_main_folder",
+					"ftp_port":"21"
 				},
 	"remote_storage_inst": "01AAA_RS",
 	"remote_storage_apikey": "l8xx...",

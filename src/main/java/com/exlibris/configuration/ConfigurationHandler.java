@@ -30,6 +30,7 @@ public class ConfigurationHandler {
             } else {
                 URL resource = getClass().getClassLoader().getResource(configurationFile);
                 content = new String(Files.readAllBytes(Paths.get(resource.toURI())));
+                logger.info("Success geting file from :" + resource.getPath());
             }
             logger.info("loading conf.json");
             jsonObject = new JSONObject(content);

@@ -9,8 +9,10 @@ import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
 import com.exlibris.configuration.ConfigurationHandler;
+import com.exlibris.ftp.FTPClient;
+import com.exlibris.ftp.FTPUtil;
+import com.exlibris.ftp.SFTPUtil;
 import com.exlibris.items.ItemData;
-import com.exlibris.util.FTPUtil;
 
 public class RequestsMain {
 
@@ -20,11 +22,13 @@ public class RequestsMain {
 
     public static synchronized void sendRequestsToSCF(String institution) {
         try {
+        	FTPClient ftpUtil;
             logger.info("Starting Send Requests To SCF For Institution: " + institution);
 
             JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
             String ftpFolder = props.getJSONObject("ftp_server").getString("main_folder");
-
+            String ftpPort = props.getJSONObject("ftp_server").getString("ftp_port");
+            
             // empty the local folder
             File xmlFolder = new File(mainLocalFolder + "xml//");
             if (xmlFolder.isDirectory()) {
@@ -32,8 +36,13 @@ public class RequestsMain {
             } else {
                 xmlFolder.mkdirs();
             }
+            if (ftpPort.equals("22")) {
+				ftpUtil = new SFTPUtil();
+			}else {
+				ftpUtil = new FTPUtil();
+			}
             // get files from ftp
-            FTPUtil.getFiles("/" + ftpFolder + "/" + institution + "/requests/", mainLocalFolder + "xml//");
+            ftpUtil.getFiles("/" + ftpFolder + "/" + institution + "/requests/", mainLocalFolder + "xml//");
 
             // loop over xml files and convert them to records
             File[] xmlFiles = xmlFolder.listFiles();

@@ -1,5 +1,7 @@
 package com.exlibris.items;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
@@ -43,10 +45,15 @@ public class ItemsHandler {
                         holdingId = SCFUtil.createSCFHoldingAndGetId(jsonBibObject, mmsId);
                     }
                 }
-                logger.debug("Creating Item Based SCF on mmsId and holdingId");
-                String itemPid = SCFUtil.createSCFItemAndGetId(itemData, mmsId, holdingId);
-                logger.debug("Loan the new Item who was created");
-                SCFUtil.createSCFLoan(itemData, itemPid);
+                if (holdingId != null) {
+	                logger.debug("Creating Item Based SCF on mmsId and holdingId");
+	                String itemPid = SCFUtil.createSCFItemAndGetId(itemData, mmsId, holdingId);
+	                try {
+						TimeUnit.SECONDS.sleep(3);
+					} catch (InterruptedException e) {}
+	                logger.debug("Loan the new Item who was created");
+	                SCFUtil.createSCFLoan(itemData, itemPid);
+                }
 
             }
         } else {
