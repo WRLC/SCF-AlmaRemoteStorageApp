@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 import org.apache.log4j.Logger;
+import org.json.JSONObject;
 
+import com.exlibris.configuration.ConfigurationHandler;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.jcraft.jsch.JSch;
@@ -89,13 +91,16 @@ public class SFTPUtil extends FTPClient {
 
 	@Override
 	protected void open() throws Exception {
-		String server = "sftp.wrlc2k.wrlc.org";
-		String user = "scfapp";
-		String pass = "ChinacatSunflower";
+		JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        JSONObject ftpProps = props.getJSONObject("ftp_server");
+        String server = ftpProps.getString("host");
+        String user = ftpProps.getString("user");
+        String pass = ftpProps.getString("password");
+		String ftpPort = ftpProps.getString("ftp_port");
 
 		if (sftpChannel == null || !sftpChannel.isConnected()) {
 			try {
-				int port = 22;
+				int port = Integer.valueOf(ftpPort);
 
 				sftpChannel = connect(server, user, pass, port, 30000);
 

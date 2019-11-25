@@ -12,6 +12,9 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.log4j.Logger;
+import org.json.JSONObject;
+
+import com.exlibris.configuration.ConfigurationHandler;
 
 public class FTPUtil extends com.exlibris.ftp.FTPClient{
 
@@ -21,12 +24,15 @@ public class FTPUtil extends com.exlibris.ftp.FTPClient{
 
     @Override
 	protected void open() throws Exception {
-        String server = "ftp.exlibris.co.il";
-        String user = "public";
-        String pass = "Atg!nG55s";
+    	JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        JSONObject ftpProps = props.getJSONObject("ftp_server");
+        String server = ftpProps.getString("host");
+        String user = ftpProps.getString("user");
+        String pass = ftpProps.getString("password");
+		String ftpPort = ftpProps.getString("ftp_port");
 
         // Connect to the SERVER
-        ftpClient.connect(server, 21);
+        ftpClient.connect(server, Integer.valueOf(ftpPort));
         if (!FTPReply.isPositiveCompletion(ftpClient.getReplyCode())) {
         	logger.warn("Could not connect to the server.");
         	System.out.println("Could not connect to the server.");
