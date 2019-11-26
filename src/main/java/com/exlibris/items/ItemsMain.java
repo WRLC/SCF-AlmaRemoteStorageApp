@@ -45,7 +45,7 @@ public class ItemsMain {
 				ftpUtil = new FTPUtil();
 			}
             
-			ftpUtil.getFiles("/" + ftpFolder + "/" + institution + "/items/OLD/", mainLocalFolder + "targz//");
+			ftpUtil.getFiles("/" + ftpFolder + "/" + institution + "/items/", mainLocalFolder + "targz//");
 
             logger.debug("loop over tar gz files and exact them to xml folder");
             XmlUtil.unTarGzFolder(tarGzFolder, mainLocalFolder + "xml//");
