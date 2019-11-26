@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.net.util.Base64;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
@@ -52,6 +52,7 @@ public class WebhookServlet extends HttpServlet {
 			body += str;
 		}
 		logger.info("message is :" + body);
+		logger.info("signature is :" + signature);
 		resp.getWriter().write("message is :" + body);
 		final String message = body;
 		boolean validateSignature = false;
@@ -78,9 +79,15 @@ public class WebhookServlet extends HttpServlet {
 
 	private boolean validateSignature(String message, String secret, String signature) throws Exception {
 		Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
-		SecretKeySpec secret_key = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
+		SecretKeySpec secret_key = new SecretKeySpec(secret.getBytes("UTF-8"), "HmacSHA256");
 		sha256_HMAC.init(secret_key);
-		String hash = Base64.encodeBase64URLSafeString(sha256_HMAC.doFinal(message.getBytes())) + "=";
-		return hash.equals(signature);
+		String hash = Base64.encodeBase64String(sha256_HMAC.doFinal(message.getBytes("UTF-8")));
+		if( hash.equals(signature)) {
+			return true;
+		}
+		else {
+			logger.debug("signature is "+signature + " and hash is "+hash +" not valid");
+			return false;
+		}
 	}
 }
