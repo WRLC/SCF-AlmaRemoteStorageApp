@@ -23,6 +23,7 @@ public class LoggerServlet extends HttpServlet {
         String level = req.getParameter("level");
         LogManager.getRootLogger().setLevel(Level.toLevel(level.toUpperCase()));
         logger.info("level is :" + level.toUpperCase());
+        resp.getWriter().write("level is :" + level.toUpperCase());
 
     }
 }

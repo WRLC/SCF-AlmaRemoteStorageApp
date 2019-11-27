@@ -20,5 +20,6 @@ public class ConfigurationServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         ConfigurationHandler.updateInstance();
         logger.info("End Update Configuration");
+        resp.getWriter().write("End Update Configuration");
     }
 }
