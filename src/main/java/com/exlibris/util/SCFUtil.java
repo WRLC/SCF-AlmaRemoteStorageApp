@@ -113,7 +113,7 @@ public class SCFUtil {
                 break;
             }
         }
-
+        logger.debug("Item is not located in a remote-storage location. library: " + library + "location: " + location + "Inst: " + institution);
         return false;
     }
 
