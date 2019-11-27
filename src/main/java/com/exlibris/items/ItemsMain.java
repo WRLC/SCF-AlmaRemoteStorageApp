@@ -24,7 +24,7 @@ public class ItemsMain {
     final static Logger logger = Logger.getLogger(ItemsMain.class);
 
     public static synchronized void mergeItemsWithSCF(String institution) {
-    	FTPClient ftpUtil;
+        FTPClient ftpUtil;
         try {
             JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
             String ftpFolder = props.getJSONObject("ftp_server").getString("main_folder");
@@ -39,13 +39,13 @@ public class ItemsMain {
                 tarGzFolder.mkdirs();
             }
             logger.debug("get files from ftp");
-			if (ftpPort.equals("22")) {
-				ftpUtil = new SFTPUtil();
-			}else {
-				ftpUtil = new FTPUtil();
-			}
-            
-			ftpUtil.getFiles("/" + ftpFolder + "/" + institution + "/items/", mainLocalFolder + "targz//");
+            if (ftpPort.equals("22")) {
+                ftpUtil = new SFTPUtil();
+            } else {
+                ftpUtil = new FTPUtil();
+            }
+
+            ftpUtil.getFiles(ftpFolder + "/" + institution + "/items/", mainLocalFolder + "targz//");
 
             logger.debug("loop over tar gz files and exact them to xml folder");
             XmlUtil.unTarGzFolder(tarGzFolder, mainLocalFolder + "xml//");
