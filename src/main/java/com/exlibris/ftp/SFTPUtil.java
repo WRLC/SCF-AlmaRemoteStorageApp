@@ -123,7 +123,7 @@ public class SFTPUtil extends FTPClient {
 	}
 
 	@Override
-	public void getFiles(String ftpFolder, String localFolder) {
+	public synchronized void getFiles(String ftpFolder, String localFolder) {
 		try {
 			logger.info("get files from ftp folder:" + ftpFolder + " local folder : " + localFolder);
 			open();
