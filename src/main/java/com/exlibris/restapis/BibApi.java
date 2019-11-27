@@ -6,14 +6,14 @@ public class BibApi {
 
     final private static Logger logger = Logger.getLogger(AlmaRestUtil.class);
 
-    public static HttpResponse retrieveBibsbyNZ(
-            String nzMmsId, String view, String expand, String baseurl, String apiKey) {
+    public static HttpResponse retrieveBibsbyNZ(String nzMmsId, String view, String expand, String baseurl,
+            String apiKey) {
 
         logger.info("Starting to handle retrieve Bibs from NZ: " + nzMmsId + ".");
         logger.info("Network Number: " + nzMmsId + " - calling GET");
 
-        String url = baseurl + "/almaws/v1/bibs?nz_mms_id=" + nzMmsId + "&view=" + view + "&expand="
-                + expand + "&apikey=" + apiKey;
+        String url = baseurl + "/almaws/v1/bibs?nz_mms_id=" + nzMmsId + "&view=" + view + "&expand=" + expand
+                + "&apikey=" + apiKey;
         HttpResponse bibResponse = AlmaRestUtil.sendHttpReq(url, "GET", null);
 
         return bibResponse;

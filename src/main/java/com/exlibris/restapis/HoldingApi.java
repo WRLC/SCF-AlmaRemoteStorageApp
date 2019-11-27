@@ -7,7 +7,6 @@ public class HoldingApi {
     final private static Logger logger = Logger.getLogger(HoldingApi.class);
 
     public static HttpResponse createHolding(String mmsId, String body, String baseurl, String apiKey) {
-
         logger.info("Starting to handle creating Holding: " + body + ".");
         logger.info("Mms Id: " + mmsId + " - calling POST");
 

@@ -22,13 +22,13 @@ public class RequestsMain {
 
     public static synchronized void sendRequestsToSCF(String institution) {
         try {
-        	FTPClient ftpUtil;
+            FTPClient ftpUtil;
             logger.info("Starting Send Requests To SCF For Institution: " + institution);
 
             JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
             String ftpFolder = props.getJSONObject("ftp_server").getString("main_folder");
             String ftpPort = props.getJSONObject("ftp_server").getString("ftp_port");
-            
+
             // empty the local folder
             File xmlFolder = new File(mainLocalFolder + "xml//");
             if (xmlFolder.isDirectory()) {
@@ -37,10 +37,10 @@ public class RequestsMain {
                 xmlFolder.mkdirs();
             }
             if (ftpPort.equals("22")) {
-				ftpUtil = new SFTPUtil();
-			}else {
-				ftpUtil = new FTPUtil();
-			}
+                ftpUtil = new SFTPUtil();
+            } else {
+                ftpUtil = new FTPUtil();
+            }
             // get files from ftp
             ftpUtil.getFiles("/" + ftpFolder + "/" + institution + "/requests/", mainLocalFolder + "xml//");
 

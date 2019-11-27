@@ -19,7 +19,6 @@ public class RequestHandler {
         } else {
             logger.warn("Create Request Failed. Barcode: " + requestData.getBarcode() + "X Does not exist in SCF");
         }
-
     }
 
     public static void createBibRequest(ItemData itemData) {

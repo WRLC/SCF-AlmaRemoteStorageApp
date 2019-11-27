@@ -16,39 +16,40 @@ import org.json.JSONObject;
 
 import com.exlibris.configuration.ConfigurationHandler;
 
-public class FTPUtil extends com.exlibris.ftp.FTPClient{
+public class FTPUtil extends com.exlibris.ftp.FTPClient {
 
     final static Logger logger = Logger.getLogger(FTPUtil.class);
 
     static FTPClient ftpClient = new FTPClient();
 
     @Override
-	protected void open() throws Exception {
-    	JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+    protected void open() throws Exception {
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         JSONObject ftpProps = props.getJSONObject("ftp_server");
         String server = ftpProps.getString("host");
         String user = ftpProps.getString("user");
         String pass = ftpProps.getString("password");
-		String ftpPort = ftpProps.getString("ftp_port");
+        String ftpPort = ftpProps.getString("ftp_port");
 
         // Connect to the SERVER
         ftpClient.connect(server, Integer.valueOf(ftpPort));
         if (!FTPReply.isPositiveCompletion(ftpClient.getReplyCode())) {
-        	logger.warn("Could not connect to the server.");
-        	System.out.println("Could not connect to the server.");
+            logger.warn("Could not connect to the server.");
+            System.out.println("Could not connect to the server.");
             return;
         }
 
         // Login to the SERVER
         ftpClient.enterLocalPassiveMode();
         if (!ftpClient.login(user, pass)) {
-        	logger.warn("Could not login to the server.");
-        	System.out.println("Could not login to the server.");
+            logger.warn("Could not login to the server.");
+            System.out.println("Could not login to the server.");
             return;
         }
     }
+
     @Override
-	public void close() throws Exception {
+    public void close() throws Exception {
         // Disconnect from the SERVER
         ftpClient.logout();
         ftpClient.disconnect();
@@ -60,6 +61,7 @@ public class FTPUtil extends com.exlibris.ftp.FTPClient{
         ftpClient.rename(Sorce, target);
         close();
     }
+
     @Override
     public synchronized void getFiles(String ftpFolder, String localFolder) {
         try {
@@ -88,8 +90,7 @@ public class FTPUtil extends com.exlibris.ftp.FTPClient{
                         logger.info("Success retrieving file :" + file.getName());
                     } else {
                         logger.debug("can't retrieve File move back to folder");
-                        ftpClient.rename(ftpFolder + "/OLD/" + file.getName(),
-                                ftpFolder + "/" + file.getName());
+                        ftpClient.rename(ftpFolder + "/OLD/" + file.getName(), ftpFolder + "/" + file.getName());
                     }
                 }
                 outputStream.close();
@@ -102,14 +103,15 @@ public class FTPUtil extends com.exlibris.ftp.FTPClient{
         }
     }
 
-	private boolean isFile(FTPFile file) {
+    private boolean isFile(FTPFile file) {
         if (!file.getName().equals(".") && !file.getName().equals("..") && !file.isDirectory()) {
             return true;
         }
         return false;
     }
+
     @Override
-    public  boolean uploadSingleFile(String localFilePath, String remoteFilePath) throws Exception {
+    public boolean uploadSingleFile(String localFilePath, String remoteFilePath) throws Exception {
 
         File localFile = new File(localFilePath);
         InputStream inputStream = new FileInputStream(localFile);
@@ -123,7 +125,7 @@ public class FTPUtil extends com.exlibris.ftp.FTPClient{
         }
 
     }
-    
+
     public void removeDirectory(String parentDir, String currentDir) throws Exception {
         open();
         String dirToList = parentDir;
@@ -167,8 +169,9 @@ public class FTPUtil extends com.exlibris.ftp.FTPClient{
         }
 
     }
+
     @Override
-    public  void closeconn() throws Exception {
+    public void closeconn() throws Exception {
         close();
     }
 }

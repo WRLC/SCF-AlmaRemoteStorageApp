@@ -27,12 +27,11 @@ public class SchedulerMain {
 
         JobDetail jobLoggerJobDetail = newJob(LoggerJob.class).build();
 
-
         // 10 minutes after midnight
-        Trigger triggerLoggerJob = newTrigger().startNow().withSchedule(
-                CronScheduleBuilder.cronSchedule("00 10 00 * * ?").inTimeZone(TimeZone.getTimeZone("Etc/UTC")))
+        Trigger triggerLoggerJob = newTrigger().startNow()
+                .withSchedule(
+                        CronScheduleBuilder.cronSchedule("00 10 00 * * ?").inTimeZone(TimeZone.getTimeZone("Etc/UTC")))
                 .startNow().build();
-
 
         scheduler.scheduleJob(jobLoggerJobDetail, triggerLoggerJob);
     }

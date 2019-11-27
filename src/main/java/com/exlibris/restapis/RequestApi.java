@@ -43,6 +43,4 @@ public class RequestApi {
         return bibResponse;
     }
 
-
-
 }

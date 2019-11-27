@@ -72,7 +72,6 @@ public class XmlUtil {
         }
     }
 
-
     public static String recordXmlToMarcXml(String recordXml) throws Exception {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
@@ -97,7 +96,5 @@ public class XmlUtil {
         return sw.toString();
 
     }
-
-
 
 }

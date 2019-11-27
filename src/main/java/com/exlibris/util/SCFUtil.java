@@ -113,7 +113,8 @@ public class SCFUtil {
                 break;
             }
         }
-        logger.debug("Item is not located in a remote-storage location. library: " + library + "location: " + location + "Inst: " + institution);
+        logger.debug("Item is not located in a remote-storage location. library: " + library + "location: " + location
+                + "Inst: " + institution);
         return false;
     }
 
@@ -365,8 +366,8 @@ public class SCFUtil {
         String holdingId = jsonItemObject.getJSONObject("holding_data").getString("holding_id");
         String itemPid = jsonItemObject.getJSONObject("item_data").getString("pid");
 
-        HttpResponse itemResponce = ItemApi.scanIn(mmsId, holdingId, itemPid, "scan", baseUrl, library, circ_desk, "true", 
-                institutionApiKey);
+        HttpResponse itemResponce = ItemApi.scanIn(mmsId, holdingId, itemPid, "scan", baseUrl, library, circ_desk,
+                "true", institutionApiKey);
 
         if (itemResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.warn("Can't scan in institution : " + requestData.getInstitution() + " item. Barcode : "

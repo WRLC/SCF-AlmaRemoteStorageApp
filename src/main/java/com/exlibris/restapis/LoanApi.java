@@ -15,5 +15,4 @@ public class LoanApi {
         HttpResponse loanResponse = AlmaRestUtil.sendHttpReq(url, "POST", body);
         return loanResponse;
     }
-
 }

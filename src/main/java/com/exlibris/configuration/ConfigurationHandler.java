@@ -19,7 +19,7 @@ public class ConfigurationHandler {
 
     private JSONObject props = null;
 
-    private ConfigurationHandler(){
+    private ConfigurationHandler() {
         JSONObject jsonObject = null;
         String content = null;
         try {

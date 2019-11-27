@@ -78,8 +78,6 @@ public class ItemData {
         this.networkNumber = networkNumber;
     }
 
-
-
     public static ItemData dataFieldToItemData(DataField dataField, String institution, String nZMmsId) {
         String barcode = dataField.getSubfieldsAsString(BARCODE_SUB_FIELD);
         String library = dataField.getSubfieldsAsString(LIBRARY_SUB_FIELD);

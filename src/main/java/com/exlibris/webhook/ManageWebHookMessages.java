@@ -107,6 +107,7 @@ public class ManageWebHookMessages {
         }
 
     }
+
     private static String getInsByUserId(String userId) {
         try {
             return userId.substring(0, userId.indexOf("-"));

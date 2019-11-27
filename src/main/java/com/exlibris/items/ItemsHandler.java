@@ -46,13 +46,14 @@ public class ItemsHandler {
                     }
                 }
                 if (holdingId != null) {
-	                logger.debug("Creating Item Based SCF on mmsId and holdingId");
-	                String itemPid = SCFUtil.createSCFItemAndGetId(itemData, mmsId, holdingId);
-	                try {
-						TimeUnit.SECONDS.sleep(3);
-					} catch (InterruptedException e) {}
-	                logger.debug("Loan the new Item who was created");
-	                SCFUtil.createSCFLoan(itemData, itemPid);
+                    logger.debug("Creating Item Based SCF on mmsId and holdingId");
+                    String itemPid = SCFUtil.createSCFItemAndGetId(itemData, mmsId, holdingId);
+                    try {
+                        TimeUnit.SECONDS.sleep(3);
+                    } catch (InterruptedException e) {
+                    }
+                    logger.debug("Loan the new Item who was created");
+                    SCFUtil.createSCFLoan(itemData, itemPid);
                 }
 
             }
