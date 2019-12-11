@@ -16,7 +16,7 @@ import com.exlibris.items.ItemData;
 
 public class RequestsMain {
 
-    static String mainLocalFolder = "files//requests//";
+    final static String MAINLOCALFOLDER = "files//requests//";
 
     final static Logger logger = Logger.getLogger(RequestsMain.class);
 
@@ -28,7 +28,10 @@ public class RequestsMain {
             JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
             String ftpFolder = props.getJSONObject("ftp_server").getString("main_folder");
             String ftpPort = props.getJSONObject("ftp_server").getString("ftp_port");
-
+            String mainLocalFolder = MAINLOCALFOLDER;
+            if (props.has("main_local_folder") && props.get("main_local_folder") != null) {
+                mainLocalFolder = props.getString("main_local_folder") + "//" + MAINLOCALFOLDER;
+            }
             // empty the local folder
             File xmlFolder = new File(mainLocalFolder + "xml//");
             if (xmlFolder.isDirectory()) {

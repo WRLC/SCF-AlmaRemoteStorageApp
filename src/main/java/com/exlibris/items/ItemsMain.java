@@ -3,6 +3,7 @@ package com.exlibris.items;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -19,7 +20,7 @@ import com.exlibris.util.XmlUtil;
 
 public class ItemsMain {
 
-    static String mainLocalFolder = "files//items//";
+    final static String MAINLOCALFOLDER = "files//items//";
 
     final static Logger logger = Logger.getLogger(ItemsMain.class);
 
@@ -29,7 +30,10 @@ public class ItemsMain {
             JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
             String ftpFolder = props.getJSONObject("ftp_server").getString("main_folder");
             String ftpPort = props.getJSONObject("ftp_server").getString("ftp_port");
-
+            String mainLocalFolder = MAINLOCALFOLDER;
+            if (props.has("main_local_folder") && props.get("main_local_folder") != null) {
+                mainLocalFolder = props.getString("main_local_folder") + "//" + MAINLOCALFOLDER;
+            }
             logger.info("Starting Merge Items With SCF For Institution: " + institution);
             logger.debug("empty the local folder");
             File tarGzFolder = new File(mainLocalFolder + "targz//");

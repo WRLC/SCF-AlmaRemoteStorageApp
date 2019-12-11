@@ -1,5 +1,6 @@
 {
 	"gateway": "https://api-na.hosted.exlibrisgroup.com",
+	"main_local_folder": "/tmp",
 	"ftp_server": {
 					"host": "my.ftp.server",
 					"user": "user",

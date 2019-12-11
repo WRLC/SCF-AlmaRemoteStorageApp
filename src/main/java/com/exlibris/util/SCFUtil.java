@@ -156,7 +156,7 @@ public class SCFUtil {
     }
 
     public static JSONObject getINSItem(ItemData itemData) {
-        logger.debug("get institution : " + itemData.getInstitution() + "Item. Barcode : " + itemData.getBarcode());
+        logger.debug("get institution : " + itemData.getInstitution() + " Item. Barcode : " + itemData.getBarcode());
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String baseUrl = props.get("gateway").toString();
         String institutionApiKey = null;
@@ -339,7 +339,7 @@ public class SCFUtil {
 
     public static void scanINSRequest(JSONObject jsonItemObject, ItemData requestData) {
         logger.debug(
-                "return request : " + requestData.getInstitution() + "Item. Barcode : " + requestData.getBarcode());
+                "return request : " + requestData.getInstitution() + " Item. Barcode : " + requestData.getBarcode());
         String library = jsonItemObject.getJSONObject("item_data").getJSONObject("library").getString("value");
         if (jsonItemObject.getJSONObject("holding_data").getBoolean("in_temp_location")) {
             library = jsonItemObject.getJSONObject("holding_data").getJSONObject("temp_library").getString("value");

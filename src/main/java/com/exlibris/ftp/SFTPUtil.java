@@ -35,7 +35,7 @@ public class SFTPUtil extends FTPClient {
             session.setTimeout(timeOut);
             session.setPassword(password);
             session.setUserInfo(new MyUserInfo(password));
-            logger.info("[FTP] connecting to server:" + server);
+            logger.info("[SFTP] connecting to server:" + server);
             // connection timeout
             session.setConfig("PreferredAuthentications", "publickey,keyboard-interactive,password");
             session.connect(timeOut);
