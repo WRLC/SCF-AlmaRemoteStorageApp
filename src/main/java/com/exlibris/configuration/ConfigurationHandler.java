@@ -1,7 +1,10 @@
 package com.exlibris.configuration;
 
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -28,9 +31,18 @@ public class ConfigurationHandler {
                 content = IOUtils.toString(urlc.getInputStream(), "UTF-8");
                 logger.info("Success geting file from :" + System.getenv("CONFIG_FILE"));
             } else {
-                URL resource = getClass().getClassLoader().getResource(configurationFile);
-                content = new String(Files.readAllBytes(Paths.get(resource.toURI())));
-                logger.info("Success geting file from :" + resource.getPath());
+                try {
+                    URL resource = getClass().getClassLoader().getResource(configurationFile);
+                    System.out.println(resource.getPath());
+                    content = new String(Files.readAllBytes(Paths.get(resource.toURI())));
+                    logger.info("Success geting file from :" + resource.getPath());
+                } catch (FileSystemNotFoundException e) {
+                    // in jar file
+                    InputStream resource = getClass().getClassLoader().getResourceAsStream(configurationFile);
+                    StringWriter writer = new StringWriter();
+                    IOUtils.copy(resource, writer, "UTF-8");
+                    content = writer.toString();
+                }
             }
             logger.info("loading conf.json");
             jsonObject = new JSONObject(content);

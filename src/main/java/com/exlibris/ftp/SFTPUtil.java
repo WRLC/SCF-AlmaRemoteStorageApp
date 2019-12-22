@@ -122,6 +122,7 @@ public class SFTPUtil extends FTPClient {
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public synchronized void getFiles(String ftpFolder, String localFolder) {
         try {

@@ -92,11 +92,13 @@ public class SCFUtil {
     }
 
     public static boolean isItemInRemoteStorage(ItemData itemData) {
+        if (itemData.getLibrary() == null || itemData.getLocation() == null) {
+            return false;
+        }
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String institution = itemData.getInstitution();
         String library = itemData.getLibrary();
         String location = itemData.getLocation();
-
         JSONArray institutions = props.getJSONArray("institutions");
         for (int i = 0; i < institutions.length(); i++) {
             JSONObject inst = institutions.getJSONObject(i);

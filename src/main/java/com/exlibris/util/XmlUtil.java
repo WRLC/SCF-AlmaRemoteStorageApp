@@ -40,6 +40,7 @@ public class XmlUtil {
             Record marc4jRecord = marcReader.next();
             records.add(marc4jRecord);
         }
+        inputStream.close();
         return records;
     }
 

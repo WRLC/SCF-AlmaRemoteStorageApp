@@ -13,11 +13,14 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import com.exlibris.library.LibraryHandler;
+
 public class ItemData {
 
     final static String BARCODE_SUB_FIELD = "b";
     final static String LIBRARY_SUB_FIELD = "c";
     final static String LOCATION_SUB_FIELD = "l";
+    final static String INTERNAL_NOTE_2 = "n";
 
     private String barcode;
     private String institution;
@@ -26,32 +29,44 @@ public class ItemData {
     private String networkNumber;
     private String mmsId;
     private String description;
+    private String note;
 
-    public ItemData(String barcode, String institution, String library, String location, String networkNumber) {
+    public ItemData(String barcode, String institution, String library, String location, String networkNumber,
+            String note) {
         this.barcode = barcode;
         this.institution = institution;
         this.library = library;
         this.location = location;
         this.networkNumber = networkNumber;
+        this.note = note;
+    }
 
+    public void setInstitution(String institution) {
+        this.institution = institution;
+    }
+
+    public ItemData(String barcode) {
+        this.barcode = barcode;
     }
 
     public String getMmsId() {
         return mmsId;
     }
 
+    public String getNote() {
+        return note;
+    }
+
     public String getDescription() {
         return description;
     }
 
-    public ItemData(String barcode, String institution, String mmsId, String description, String library,
-            String location) {
+    public ItemData(String barcode, String institution, String mmsId, String description, String library) {
         this.barcode = barcode;
         this.institution = institution;
         this.mmsId = mmsId;
         this.description = description;
         this.library = library;
-        this.location = location;
     }
 
     public String getBarcode() {
@@ -82,7 +97,8 @@ public class ItemData {
         String barcode = dataField.getSubfieldsAsString(BARCODE_SUB_FIELD);
         String library = dataField.getSubfieldsAsString(LIBRARY_SUB_FIELD);
         String location = dataField.getSubfieldsAsString(LOCATION_SUB_FIELD);
-        ItemData itemData = new ItemData(barcode, institution, library, location, nZMmsId);
+        String note = dataField.getSubfieldsAsString(INTERNAL_NOTE_2);
+        ItemData itemData = new ItemData(barcode, institution, library, location, nZMmsId, note);
         return itemData;
     }
 
@@ -101,19 +117,26 @@ public class ItemData {
                     : element.getElementsByTagName("xb:description").item(0).getTextContent();
             String mmsId = element.getElementsByTagName("xb:mmsId").item(0) == null ? null
                     : element.getElementsByTagName("xb:mmsId").item(0).getTextContent();
-            String library = element.getElementsByTagName("xb:mmsId").item(0) == null ? null
-                    : element.getElementsByTagName("xb:libraryCode").item(0).getTextContent();
-            String location = null;
-            try {
-                location = ((Element) element.getElementsByTagName("xb:operationalRecordinformation").item(0))
-                        .getElementsByTagName("xb:permanent_physical_location_code").item(0).getTextContent();
-            } catch (Exception e) {
+            String library = null;
+            if (element.getElementsByTagName("xb:institutionCode").item(0) != null) {
+                institution = element.getElementsByTagName("xb:institutionCode").item(0) == null ? null
+                        : element.getElementsByTagName("xb:institutionCode").item(0).getTextContent();
+                String libraryName = null;
+                try {
+                    libraryName = ((Element) element.getElementsByTagName("xb:pickup").item(0))
+                            .getElementsByTagName("xb:library").item(0).getTextContent();
+                    library = LibraryHandler.getLibraryCode(institution, libraryName);
+                } catch (Exception e) {
+                }
+            } else {
+                library = element.getElementsByTagName("xb:libraryCode").item(0) == null ? null
+                        : element.getElementsByTagName("xb:libraryCode").item(0).getTextContent();
             }
-            requestDataList.add(new ItemData(barcode, institution, mmsId, description, library, location));
+
+            requestDataList.add(new ItemData(barcode, institution, mmsId, description, library));
         }
 
         return requestDataList;
 
     }
-
 }

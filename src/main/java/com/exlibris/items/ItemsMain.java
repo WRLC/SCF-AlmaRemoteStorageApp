@@ -3,7 +3,6 @@ package com.exlibris.items;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -59,7 +58,7 @@ public class ItemsMain {
             int totalRecords = 0;
             for (File xmlFile : xmlFiles) {
                 String methodName = null;
-                if (xmlFile.getName().endsWith("_delete.xml")) {
+                if (xmlFile.getName().toLowerCase().contains("_delete")) {
                     methodName = "itemDeleted";
                 } else {
                     methodName = "itemUpdated";

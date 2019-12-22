@@ -87,33 +87,38 @@ public class ManageWebHookMessages {
     }
 
     private static void loanReturned(JSONObject webhookMessage) {
+
         String userId = webhookMessage.getJSONObject("item_loan").getString("user_id");
-        String institution = getInsByUserId(userId);
-        if (institution == null) {
-            logger.info("Request Not Part Of RCF. userId: " + userId);
-            return;
-        }
-        logger.info("Request source institution is :" + institution + ". userId: " + userId);
         String barcode = webhookMessage.getJSONObject("item_loan").getString("item_barcode");
         if (barcode.endsWith("X")) {
             barcode = barcode.substring(0, barcode.length() - 1);
+        } else {
+            logger.info("Request Not Part Of SCF. userId: " + userId + " Barcode: " + barcode);
+            return;
         }
-        ItemData itemData = new ItemData(barcode, institution, null, null,
-                webhookMessage.getJSONObject("item_loan").getString("mms_id"));
+        ItemData itemData = new ItemData(barcode);
+        String institution = null;
+        try {
+            JSONObject jsonScfItemObject = SCFUtil.getSCFItem(itemData);
+            institution = jsonScfItemObject.getJSONObject("item_data").getJSONObject("provenance").getString("value");
+        } catch (Exception e) {
+            logger.info("Can't get Request institution .Barcode: " + barcode);
+            logger.info("Request Not Part Of SCF. userId: " + userId);
+            return;
+        }
+
+        if (institution == null) {
+            logger.info("Request Not Part Of SCF. userId: " + userId + " Barcode: " + barcode);
+            return;
+        }
+        itemData.setInstitution(institution);
+        logger.info("Request source institution is :" + institution + ". userId: " + userId);
         logger.info("Scan In Request. Source Institution Barcode: " + itemData.getBarcode());
         JSONObject jsonItemObject = SCFUtil.getINSItem(itemData);
         if (jsonItemObject != null) {
             SCFUtil.scanINSRequest(jsonItemObject, itemData);
         }
 
-    }
-
-    private static String getInsByUserId(String userId) {
-        try {
-            return userId.substring(0, userId.indexOf("-"));
-        } catch (StringIndexOutOfBoundsException e) {
-            return null;
-        }
     }
 
     private static String getInstitutionByJobId(String jobId, String jobType) {
