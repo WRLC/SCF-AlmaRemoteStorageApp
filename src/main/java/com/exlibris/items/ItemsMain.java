@@ -19,7 +19,7 @@ import com.exlibris.util.XmlUtil;
 
 public class ItemsMain {
 
-    final static String MAINLOCALFOLDER = "files//items//";
+    final static String MAINLOCALFOLDER = "files/items/";
 
     final static Logger logger = Logger.getLogger(ItemsMain.class);
 
@@ -31,11 +31,11 @@ public class ItemsMain {
             String ftpPort = props.getJSONObject("ftp_server").getString("ftp_port");
             String mainLocalFolder = MAINLOCALFOLDER;
             if (props.has("main_local_folder") && props.get("main_local_folder") != null) {
-                mainLocalFolder = props.getString("main_local_folder") + "//" + MAINLOCALFOLDER;
+                mainLocalFolder = props.getString("main_local_folder") + "/" + MAINLOCALFOLDER;
             }
             logger.info("Starting Merge Items With SCF For Institution: " + institution);
             logger.debug("empty the local folder");
-            File tarGzFolder = new File(mainLocalFolder + "targz//");
+            File tarGzFolder = new File(mainLocalFolder + "targz/");
             if (tarGzFolder.isDirectory()) {
                 FileUtils.cleanDirectory(tarGzFolder);
             } else {
@@ -48,12 +48,12 @@ public class ItemsMain {
                 ftpUtil = new FTPUtil();
             }
 
-            ftpUtil.getFiles(ftpFolder + "/" + institution + "/items/", mainLocalFolder + "targz//");
+            ftpUtil.getFiles(ftpFolder + "/" + institution + "/items/", mainLocalFolder + "targz/");
 
             logger.debug("loop over tar gz files and exact them to xml folder");
-            XmlUtil.unTarGzFolder(tarGzFolder, mainLocalFolder + "xml//");
+            XmlUtil.unTarGzFolder(tarGzFolder, mainLocalFolder + "xml/");
             logger.debug("loop over xml files and convert them to records");
-            File xmlFolder = new File(mainLocalFolder + "xml//");
+            File xmlFolder = new File(mainLocalFolder + "xml/");
             File[] xmlFiles = xmlFolder.listFiles();
             int totalRecords = 0;
             for (File xmlFile : xmlFiles) {

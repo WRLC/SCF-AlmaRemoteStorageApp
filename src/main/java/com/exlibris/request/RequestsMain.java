@@ -16,7 +16,7 @@ import com.exlibris.items.ItemData;
 
 public class RequestsMain {
 
-    final static String MAINLOCALFOLDER = "files//requests//";
+    final static String MAINLOCALFOLDER = "files/requests/";
 
     final static Logger logger = Logger.getLogger(RequestsMain.class);
 
@@ -30,10 +30,10 @@ public class RequestsMain {
             String ftpPort = props.getJSONObject("ftp_server").getString("ftp_port");
             String mainLocalFolder = MAINLOCALFOLDER;
             if (props.has("main_local_folder") && props.get("main_local_folder") != null) {
-                mainLocalFolder = props.getString("main_local_folder") + "//" + MAINLOCALFOLDER;
+                mainLocalFolder = props.getString("main_local_folder") + "/" + MAINLOCALFOLDER;
             }
             // empty the local folder
-            File xmlFolder = new File(mainLocalFolder + "xml//");
+            File xmlFolder = new File(mainLocalFolder + "xml/");
             if (xmlFolder.isDirectory()) {
                 FileUtils.cleanDirectory(xmlFolder);
             } else {
@@ -45,7 +45,7 @@ public class RequestsMain {
                 ftpUtil = new FTPUtil();
             }
             // get files from ftp
-            ftpUtil.getFiles("/" + ftpFolder + "/" + institution + "/requests/", mainLocalFolder + "xml//");
+            ftpUtil.getFiles(ftpFolder + "/" + institution + "/requests/", mainLocalFolder + "xml/");
 
             // loop over xml files and convert them to records
             File[] xmlFiles = xmlFolder.listFiles();
