@@ -6,7 +6,7 @@ Access to the Developer Network for all member institutions, including the remot
 
 ### For All Institutions:
 1. FTP connection configuration - To share files between the App and Alma with a  [sub-directory](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/050Administration/050Configuring_General_Alma_Functions/050External_Systems#UpdateSubmissionFormatFtp) for each institution (the directory name should include the institution code. e.g. main_folder/01AAA_ABC).
-2. API-key with r/w permission for the Bibs area
+2. API-key with r/w permission for Bibs + Conf
 3. Remote Storage Facility - To export all requests to remote storage
     - Create an [integration profile](https://developers.exlibrisgroup.com/alma/integrations/remote_storage/xml_based/)  of “remote storage” type. “Export File Path“ is "requests".
     - Create a [Remote Storage](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/030Fulfillment/080Configuring_Fulfillment/040Configuring_Remote_Storage_Facilities) connected to your integration profile.
@@ -21,10 +21,10 @@ Access to the Developer Network for all member institutions, including the remot
     - When running the Item Publishing for the first time, all existing items will be published, and therefore we need to make sure that the App is turned off, so it will not process all the items.
 5.  [Webhooks](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/090Integrations_with_External_Systems/030Resource_Management/300Webhooks)
     - Create a Webhooks Integration Profile. Message type should be JSON and under Subscriptions Select `Job Finish` to send a webhook when an Alma Job is done. Webhook listener URL will be the url after deploying the app following forward slash and "webhook". E.g.:  https://alma-remote-storage-app.herokuapp.com/webhook
-
+6. For institution which are still not part of the processed, but could be a pick location for institutions which are, they need to be configured in conf.json but only with an API-key.
 
 ### For the Remote Storage Institution:
-1. Create a patron for each Institution/Library. For example if the Institution code is 01AAA_ABC and the library code is RS, the user's primary identifier will be 01AAA_ABC-RS. (The user should have a home address.)
+1. Create a patron for each Institution/Library (which can be a pickup location). For example if the Institution code is 01AAA_ABC and the library code is RS, the user's primary identifier will be 01AAA_ABC-RS. (The user should have a home address.)
 2. Define [provenance code](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/040Resource_Management/080Configuring_Resource_Management/080Configuring_Provenance_Codes) for each institution code.
 3. Add personal-delivery for all items' [terms of use](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/030Fulfillment/080Configuring_Fulfillment/050Physical_Fulfillment#fulfillment.tou.termsOfUseManagement)
 4. Create a [Webhooks](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/090Integrations_with_External_Systems/030Resource_Management/300Webhooks) Integration Profile. Where the Message type is JSON and Under Subscriptions select `Loans`. Webhook listener URL will be (same as above) the url after deploying the app following forward slash and "webhook". E.g.:  https://alma-remote-storage-app.herokuapp.com/webhook
