@@ -4,12 +4,18 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
+import org.marc4j.marc.DataField;
+import org.marc4j.marc.MarcFactory;
+import org.marc4j.marc.Record;
 
 import com.exlibris.util.SCFUtil;
+import com.exlibris.util.XmlUtil;
 
 public class ItemsHandler {
 
     final private static Logger logger = Logger.getLogger(ItemsHandler.class);
+
+    private transient static MarcFactory factory = MarcFactory.newInstance();
 
     public static void itemUpdated(ItemData itemData) {
         logger.info("New/Update Item. Barcode: " + itemData.getBarcode());
@@ -20,30 +26,52 @@ public class ItemsHandler {
             if (!SCFUtil.isItemInRemoteStorage(itemData)) {
                 return;
             } else {
-                if (itemData.getNetworkNumber() == null) {
-                    logger.error("Missing Network Number - Can't find SCF bib for item : " + itemData.getBarcode()
-                            + " Institution : " + itemData.getInstitution());
-                    return;
-                }
-                logger.debug("get matching bib from SCF");
-                JSONObject jsonBibObject = SCFUtil.getSCFBib(itemData);
+                JSONObject jsonBibObject = null;
                 String mmsId = null;
                 String holdingId = null;
-                if (jsonBibObject == null) {
-                    logger.debug("The Bib does not exist in the remote Storage - Creating Bib and Holding");
-                    jsonBibObject = SCFUtil.createSCFBib(itemData);
-                    mmsId = jsonBibObject.getString("mms_id");
-                    holdingId = SCFUtil.createSCFHoldingAndGetId(jsonBibObject, mmsId);
-                } else {
-                    logger.debug(
-                            "The Bib exists in the remote Storage - Check for Holding get Mms Id from exist SCF Bib");
-                    mmsId = jsonBibObject.getJSONArray("bib").getJSONObject(0).getString("mms_id");
-                    holdingId = SCFUtil.getSCFHoldingFromRecordAVA(
-                            jsonBibObject.getJSONArray("bib").getJSONObject(0).getJSONArray("anies").getString(0));
-                    if (holdingId == null) {
-                        logger.debug("The Holding does not exist in the remote Storage - Creating Holding");
-                        holdingId = SCFUtil.createSCFHoldingAndGetId(jsonBibObject, mmsId);
+                if (itemData.getNetworkNumber() == null) {
+                    logger.debug("get matching bib from SCF by Institution Code");
+                    jsonBibObject = SCFUtil.getSCFBibByINST(itemData);
+                    if (jsonBibObject == null) {
+                        logger.debug("Missing Network Number - Can't find SCF bib - Creating Local Bib and Holding");
+                        Record record = itemData.getRecord();
+                        DataField df = factory.newDataField("035", ' ', ' ');
+                        String localNumber = "(" + itemData.getInstitution() + ")" + itemData.getMmsId();
+                        df.addSubfield(factory.newSubfield('a', localNumber));
+                        record.addVariableField(df);
+                        String xmlRecord = XmlUtil.recordToMarcXml(record);
+                        if (xmlRecord == null) {
+                            logger.error(
+                                    "Missing Network Number - Can't find SCF bib - Can't create Local Bib and Holding - Exiting");
+                            return;
+                        }
+                        jsonBibObject = SCFUtil.createSCFBibByINST(itemData, "<bib>" + xmlRecord + "</bib>");
+                        mmsId = jsonBibObject.getString("mms_id");
+                    } else {
+                        logger.debug(
+                                "The Bib exists in the remote Storage - Check for Holding and get Mms Id from exist SCF Bib");
+                        mmsId = jsonBibObject.getJSONArray("bib").getJSONObject(0).getString("mms_id");
+                        holdingId = SCFUtil.getSCFHoldingFromRecordAVA(
+                                jsonBibObject.getJSONArray("bib").getJSONObject(0).getJSONArray("anies").getString(0));
                     }
+                } else {
+                    logger.debug("get matching bib from SCF by NZ");
+                    jsonBibObject = SCFUtil.getSCFBibByNZ(itemData);
+                    if (jsonBibObject == null) {
+                        logger.debug("The Bib does not exist in the remote Storage - Creating Bib and Holding");
+                        jsonBibObject = SCFUtil.createSCFBibByNZ(itemData);
+                        mmsId = jsonBibObject.getString("mms_id");
+                    } else {
+                        logger.debug(
+                                "The Bib exists in the remote Storage - Check for Holding and get Mms Id from exist SCF Bib");
+                        mmsId = jsonBibObject.getJSONArray("bib").getJSONObject(0).getString("mms_id");
+                        holdingId = SCFUtil.getSCFHoldingFromRecordAVA(
+                                jsonBibObject.getJSONArray("bib").getJSONObject(0).getJSONArray("anies").getString(0));
+                    }
+                }
+                if (holdingId == null) {
+                    logger.debug("The Holding does not exist in the remote Storage - Creating Holding");
+                    holdingId = SCFUtil.createSCFHoldingAndGetId(jsonBibObject, mmsId);
                 }
                 if (holdingId != null) {
                     logger.debug("Creating Item Based SCF on mmsId and holdingId");
@@ -55,7 +83,6 @@ public class ItemsHandler {
                     logger.debug("Loan the new Item who was created");
                     SCFUtil.createSCFLoan(itemData, itemPid);
                 }
-
             }
         } else {
             logger.debug("The item exists in the remote Storage");
@@ -79,5 +106,4 @@ public class ItemsHandler {
         }
 
     }
-
 }

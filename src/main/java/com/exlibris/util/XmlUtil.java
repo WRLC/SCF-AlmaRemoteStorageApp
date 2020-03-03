@@ -1,6 +1,7 @@
 package com.exlibris.util;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -9,7 +10,6 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -21,12 +21,14 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.commons.io.FileUtils;
 import org.marc4j.MarcReader;
 import org.marc4j.MarcXmlReader;
+import org.marc4j.MarcXmlWriter;
 import org.marc4j.marc.Record;
 import org.rauschig.jarchivelib.Archiver;
 import org.rauschig.jarchivelib.ArchiverFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 public class XmlUtil {
@@ -98,4 +100,53 @@ public class XmlUtil {
 
     }
 
+    public static String removeMarcNameSpace(String xml) throws Exception {
+
+        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+        docBuilderFactory.setNamespaceAware(true);
+        DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+        InputSource inputSource = new InputSource(new StringReader(xml));
+        Document document = docBuilder.parse(inputSource);
+        removeNameSpace(document.getDocumentElement());
+        document.getDocumentElement().setAttribute("xmlns:marc", "");
+        document.getDocumentElement().removeAttributeNS("http://www.loc.gov/MARC21/slim", "xmlns:marc");
+        DOMSource requestXMLSource = new DOMSource(document.getDocumentElement());
+        StringWriter requestXMLStringWriter = new StringWriter();
+        StreamResult requestXMLStreamResult = new StreamResult(requestXMLStringWriter);
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer = tf.newTransformer();
+        transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+        transformer.setOutputProperty(OutputKeys.INDENT, "no");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.transform(requestXMLSource, requestXMLStreamResult);
+        String modifiedRequestXML = requestXMLStringWriter.toString();
+
+        return modifiedRequestXML;
+    }
+
+    public static void removeNameSpace(Node node) {
+        node.setPrefix("");
+        NodeList nodeList = node.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node currentNode = nodeList.item(i);
+            if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
+                // calls this method for all the children which is Element
+                removeNameSpace(currentNode);
+            }
+        }
+    }
+
+    public static String recordToMarcXml(Record record) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            MarcXmlWriter.writeSingleRecord(record, out, false);
+            String xmlString = new String(out.toByteArray());
+            xmlString = removeMarcNameSpace(xmlString);
+            xmlString = xmlString.replace("record xmlns=\"http://www.loc.gov/MARC21/slim\"", "record");
+            return xmlString;
+        } catch (Exception e) {
+            return null;
+        }
+
+    }
 }

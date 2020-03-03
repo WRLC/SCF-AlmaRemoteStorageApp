@@ -26,9 +26,15 @@ public class RequestHandler {
         logger.debug("get Institution Bib to get NZ MMS ID");
         JSONObject jsonINSBibObject = SCFUtil.getINSBib(itemData);
         String networkNumber = getNetworkNumber(jsonINSBibObject.getJSONArray("network_number"));
-        itemData.setNetworkNumber(networkNumber);
-        logger.debug("get SCF Bibbased on NZ MMS ID");
-        JSONObject jsonBibObject = SCFUtil.getSCFBib(itemData);
+        JSONObject jsonBibObject = null;
+        if (networkNumber != null) {
+            itemData.setNetworkNumber(networkNumber);
+            logger.debug("get SCF Bibbased on NZ MMS ID");
+            jsonBibObject = SCFUtil.getSCFBibByNZ(itemData);
+        } else {
+            logger.debug("get SCF Bibbased on Local Institution MMS ID");
+            jsonBibObject = SCFUtil.getSCFBibByINST(itemData);
+        }
         SCFUtil.createSCFBibRequest(jsonBibObject, itemData);
     }
 

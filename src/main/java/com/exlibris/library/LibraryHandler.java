@@ -34,11 +34,15 @@ public class LibraryHandler {
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String baseUrl = props.get("gateway").toString();
         String institutionApiKey = null;
-        for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
-            JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
-            if (inst.get("code").toString().equals(institution)) {
-                institutionApiKey = inst.getString("apikey");
-                break;
+        if (props.get("remote_storage_inst").equals(institution)) {
+            institutionApiKey = props.get("remote_storage_apikey").toString();
+        } else {
+            for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
+                JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
+                if (inst.get("code").toString().equals(institution)) {
+                    institutionApiKey = inst.getString("apikey");
+                    break;
+                }
             }
         }
         if (institutionApiKey == null) {

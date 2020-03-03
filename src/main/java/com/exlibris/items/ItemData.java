@@ -8,6 +8,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.marc4j.marc.DataField;
+import org.marc4j.marc.Record;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -30,9 +31,11 @@ public class ItemData {
     private String mmsId;
     private String description;
     private String note;
+    private Record record;
 
-    public ItemData(String barcode, String institution, String library, String location, String networkNumber,
-            String note) {
+    public ItemData(String mmsId, String barcode, String institution, String library, String location,
+            String networkNumber, String note) {
+        this.mmsId = mmsId;
         this.barcode = barcode;
         this.institution = institution;
         this.library = library;
@@ -93,12 +96,20 @@ public class ItemData {
         this.networkNumber = networkNumber;
     }
 
-    public static ItemData dataFieldToItemData(DataField dataField, String institution, String nZMmsId) {
+    public Record getRecord() {
+        return record;
+    }
+
+    public void setRecord(Record record) {
+        this.record = record;
+    }
+
+    public static ItemData dataFieldToItemData(String mmsId, DataField dataField, String institution, String nZMmsId) {
         String barcode = dataField.getSubfieldsAsString(BARCODE_SUB_FIELD);
         String library = dataField.getSubfieldsAsString(LIBRARY_SUB_FIELD);
         String location = dataField.getSubfieldsAsString(LOCATION_SUB_FIELD);
         String note = dataField.getSubfieldsAsString(INTERNAL_NOTE_2);
-        ItemData itemData = new ItemData(barcode, institution, library, location, nZMmsId, note);
+        ItemData itemData = new ItemData(mmsId, barcode, institution, library, location, nZMmsId, note);
         return itemData;
     }
 
@@ -118,14 +129,15 @@ public class ItemData {
             String mmsId = element.getElementsByTagName("xb:mmsId").item(0) == null ? null
                     : element.getElementsByTagName("xb:mmsId").item(0).getTextContent();
             String library = null;
+            String libraryInstitution = institution;
             if (element.getElementsByTagName("xb:institutionCode").item(0) != null) {
-                institution = element.getElementsByTagName("xb:institutionCode").item(0) == null ? null
+                libraryInstitution = element.getElementsByTagName("xb:institutionCode").item(0) == null ? null
                         : element.getElementsByTagName("xb:institutionCode").item(0).getTextContent();
                 String libraryName = null;
                 try {
                     libraryName = ((Element) element.getElementsByTagName("xb:pickup").item(0))
                             .getElementsByTagName("xb:library").item(0).getTextContent();
-                    library = LibraryHandler.getLibraryCode(institution, libraryName);
+                    library = LibraryHandler.getLibraryCode(libraryInstitution, libraryName);
                 } catch (Exception e) {
                 }
             } else {
@@ -133,7 +145,7 @@ public class ItemData {
                         : element.getElementsByTagName("xb:libraryCode").item(0).getTextContent();
             }
 
-            requestDataList.add(new ItemData(barcode, institution, mmsId, description, library));
+            requestDataList.add(new ItemData(barcode, libraryInstitution, mmsId, description, library));
         }
 
         return requestDataList;

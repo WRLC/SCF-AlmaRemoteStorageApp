@@ -1,10 +1,16 @@
 package com.exlibris.restapis;
 
+import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.HttpsURLConnection;
+
 import org.apache.log4j.Logger;
 
 public class ItemApi {
 
     final private static Logger logger = Logger.getLogger(AlmaRestUtil.class);
+    public static final int PER_SECOND_THRESHOLD = 429;
+    public static final int ERROR_WINHTTP_SECURE_FAILURE = 600;
 
     public static HttpResponse retrieveItem(String barcode, String baseUrl, String apiKey) {
 
@@ -12,7 +18,24 @@ public class ItemApi {
         logger.info("Item barcode: " + barcode + " - calling GET");
 
         String url = baseUrl + "/almaws/v1/items?item_barcode=" + barcode + "&apikey=" + apiKey;
-        HttpResponse itemResponse = AlmaRestUtil.sendHttpReq(url, "GET", null);
+        HttpResponse itemResponse = null;
+        int code = HttpsURLConnection.HTTP_INTERNAL_ERROR;
+        while (code >= HttpsURLConnection.HTTP_INTERNAL_ERROR && code < ERROR_WINHTTP_SECURE_FAILURE
+                && code != PER_SECOND_THRESHOLD) {
+            try {
+                itemResponse = AlmaRestUtil.sendHttpReq(url, "GET", null);
+                if (itemResponse != null) {
+                    code = itemResponse.getResponseCode();
+                }
+                if (code >= HttpsURLConnection.HTTP_INTERNAL_ERROR && code <= HttpsURLConnection.HTTP_VERSION
+                        && code != PER_SECOND_THRESHOLD) {
+                    logger.info("Response Code " + code + ". Thread sleeping for 5 minutes.");
+                    TimeUnit.MINUTES.sleep(5);
+
+                }
+            } catch (Exception e) {
+            }
+        }
 
         return itemResponse;
     }
@@ -49,8 +72,21 @@ public class ItemApi {
 
         String url = baseUrl + "/almaws/v1/bibs/" + mmsId + "/holdings/" + holdingId + "/items/" + itemPid + "?apikey="
                 + apiKey;
-        HttpResponse itemResponse = AlmaRestUtil.sendHttpReq(url, "PUT", body);
+        HttpResponse itemResponse = null;
+        int code = HttpsURLConnection.HTTP_INTERNAL_ERROR;
+        while (code >= HttpsURLConnection.HTTP_INTERNAL_ERROR && code < ERROR_WINHTTP_SECURE_FAILURE
+                && code != PER_SECOND_THRESHOLD) {
+            try {
+                itemResponse = AlmaRestUtil.sendHttpReq(url, "PUT", body);
+                code = itemResponse.getResponseCode();
+                if (code >= HttpsURLConnection.HTTP_INTERNAL_ERROR && code <= HttpsURLConnection.HTTP_VERSION) {
+                    logger.info("Response Code " + code + ". Thread sleeping for 5 minutes.");
+                    TimeUnit.MINUTES.sleep(5);
 
+                }
+            } catch (Exception e) {
+            }
+        }
         return itemResponse;
     }
 

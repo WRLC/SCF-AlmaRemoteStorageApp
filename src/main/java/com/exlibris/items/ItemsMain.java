@@ -71,10 +71,13 @@ public class ItemsMain {
                     String NZMmsId = getNetworkNumber(record.getVariableFields("035"));
                     List<VariableField> variableFields = record.getVariableFields("ITM");
                     for (VariableField variableField : variableFields) {
-                        ItemData itemData = ItemData.dataFieldToItemData((DataField) variableField, institution,
-                                NZMmsId);
+                        ItemData itemData = ItemData.dataFieldToItemData(record.getControlNumber(),
+                                (DataField) variableField, institution, NZMmsId);
                         if (itemData.getBarcode() == null) {
                             logger.warn("Synchronize Item Failed. Barcode is null Item Data: " + variableField);
+                        }
+                        if (itemData.getNetworkNumber() == null) {
+                            itemData.setRecord(record);
                         }
                         Method method = Class.forName("com.exlibris.items.ItemsHandler").getMethod(methodName,
                                 ItemData.class);
