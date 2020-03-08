@@ -75,6 +75,7 @@ public class ItemsMain {
                                 (DataField) variableField, institution, NZMmsId);
                         if (itemData.getBarcode() == null) {
                             logger.warn("Synchronize Item Failed. Barcode is null Item Data: " + variableField);
+                            continue;
                         }
                         if (itemData.getNetworkNumber() == null) {
                             itemData.setRecord(record);
