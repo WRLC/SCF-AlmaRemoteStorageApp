@@ -146,7 +146,7 @@ public class SCFUtil {
                 "<bib></bib>", baseUrl, remoteStorageApikey);
         JSONObject jsonNewBibObject = new JSONObject(bibResponse.getBody());
         if (bibResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
-            logger.warn("Can't create SCF holding. Barcode : " + itemData.getBarcode());
+            logger.warn("Can't create SCF bib. Barcode : " + itemData.getBarcode());
             return null;
         }
         return jsonNewBibObject;
