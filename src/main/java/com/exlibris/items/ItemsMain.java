@@ -73,16 +73,20 @@ public class ItemsMain {
                     for (VariableField variableField : variableFields) {
                         ItemData itemData = ItemData.dataFieldToItemData(record.getControlNumber(),
                                 (DataField) variableField, institution, NZMmsId);
-                        if (itemData.getBarcode() == null) {
-                            logger.warn("Synchronize Item Failed. Barcode is null Item Data: " + variableField);
-                            continue;
+                        try {
+                            if (itemData.getBarcode() == null) {
+                                logger.warn("Synchronize Item Failed. Barcode is null Item Data: " + variableField);
+                                continue;
+                            }
+                            if (itemData.getNetworkNumber() == null) {
+                                itemData.setRecord(record);
+                            }
+                            Method method = Class.forName("com.exlibris.items.ItemsHandler").getMethod(methodName,
+                                    ItemData.class);
+                            method.invoke(null, itemData);
+                        } catch (Exception e) {
+                            logger.error("Failed to handle item " + itemData.getBarcode(), e);
                         }
-                        if (itemData.getNetworkNumber() == null) {
-                            itemData.setRecord(record);
-                        }
-                        Method method = Class.forName("com.exlibris.items.ItemsHandler").getMethod(methodName,
-                                ItemData.class);
-                        method.invoke(null, itemData);
                     }
                 }
                 totalRecords += records.size();

@@ -60,6 +60,10 @@ public class ItemsHandler {
                     if (jsonBibObject == null) {
                         logger.debug("The Bib does not exist in the remote Storage - Creating Bib and Holding");
                         jsonBibObject = SCFUtil.createSCFBibByNZ(itemData);
+                        if (jsonBibObject == null) {
+                            logger.error("The Bib does not exist in the remote Storage - Can't create bib - Exiting");
+                            return;
+                        }
                         mmsId = jsonBibObject.getString("mms_id");
                     } else {
                         logger.debug(
