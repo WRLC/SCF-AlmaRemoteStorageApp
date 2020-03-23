@@ -436,4 +436,56 @@ public class SCFUtil {
         return jsonNewBibObject;
     }
 
+    public static JSONObject getItemRequests(JSONObject jsonItemObject, ItemData itemData) {
+        logger.debug(
+                "retrieve item requests : " + itemData.getInstitution() + " Item. Barcode : " + itemData.getBarcode());
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String baseUrl = props.get("gateway").toString();
+        String institutionApiKey = null;
+        for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
+            JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
+            if (inst.get("code").toString().equals(itemData.getInstitution())) {
+                institutionApiKey = inst.getString("apikey");
+                break;
+            }
+        }
+
+        String mmsId = jsonItemObject.getJSONObject("bib_data").getString("mms_id");
+        String holdingId = jsonItemObject.getJSONObject("holding_data").getString("holding_id");
+        String itemPid = jsonItemObject.getJSONObject("item_data").getString("pid");
+
+        HttpResponse requestsResponce = RequestApi.getRequests(mmsId, holdingId, itemPid, baseUrl, institutionApiKey);
+        if (requestsResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
+            logger.warn("Can't get SCF Item Requests. Barcode : " + itemData.getBarcode());
+            return null;
+        }
+        JSONObject jsonRequestsObject = new JSONObject(requestsResponce.getBody());
+        return jsonRequestsObject;
+    }
+
+    public static void cancelItemRequest(JSONObject jsonItemObject, ItemData itemData, String requestId) {
+        logger.debug("cancel item requests from SCF Item. Barcode : " + itemData.getBarcode());
+
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String baseUrl = props.get("gateway").toString();
+        String institutionApiKey = null;
+        for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
+            JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
+            if (inst.get("code").toString().equals(itemData.getInstitution())) {
+                institutionApiKey = inst.getString("apikey");
+                break;
+            }
+        }
+        String mmsId = jsonItemObject.getJSONObject("bib_data").getString("mms_id");
+        String holdingId = jsonItemObject.getJSONObject("holding_data").getString("holding_id");
+        String itemPid = jsonItemObject.getJSONObject("item_data").getString("pid");
+        HttpResponse requestResponce = RequestApi.cancelRequest(mmsId, holdingId, itemPid, requestId,
+                "CannotBeFulfilled", "Remote storage cannot fulfill the request", baseUrl, institutionApiKey);
+        if (requestResponce.getResponseCode() == HttpsURLConnection.HTTP_NO_CONTENT) {
+            logger.info("successfully canceled SCF Item Requests. Barcode : " + itemData.getBarcode());
+        } else {
+            logger.warn("Can't cancel SCF Item Requests. Barcode : " + itemData.getBarcode());
+        }
+    }
+
 }

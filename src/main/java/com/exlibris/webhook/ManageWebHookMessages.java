@@ -1,5 +1,8 @@
 package com.exlibris.webhook;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,7 +20,7 @@ public class ManageWebHookMessages {
     }
 
     public enum WebhooksActionType {
-        JOB_END, LOAN;
+        JOB_END, LOAN, REQUEST;
     }
 
     final private static org.apache.log4j.Logger logger = org.apache.log4j.Logger
@@ -80,6 +83,29 @@ public class ManageWebHookMessages {
             }
             logger.debug("The Job does not exist in the configuration jobs list. Job Id: " + jobId);
         }
+        case REQUEST: {
+            String event = webhookMessage.getJSONObject("event").getString("value");
+            if (event.equals("REQUEST_CANCELED")) {
+                String webhookMessageInstitution = webhookMessage.getJSONObject("institution").getString("value");
+                if (webhookMessageInstitution.equalsIgnoreCase(remoteStorageInstitution)) {
+                    String barcode = null;
+                    try {
+                        barcode = webhookMessage.getJSONObject("user_request").getString("barcode");
+                    } catch (Exception e) {
+                        logger.debug("The item barcode does not exist in the webhook message");
+                    }
+                    if (barcode != null && !barcode.isEmpty()) {
+                        if (barcode.endsWith("X")) {
+                            barcode = barcode.substring(0, barcode.length() - 1);
+                        } else {
+                            logger.info("Request Not Part Of SCF.  Barcode: " + barcode);
+                            return;
+                        }
+                        requestCanceled(barcode);
+                    }
+                }
+            }
+        }
         default:
             break;
 
@@ -119,6 +145,48 @@ public class ManageWebHookMessages {
             SCFUtil.scanINSRequest(jsonItemObject, itemData);
         }
 
+    }
+
+    private static void requestCanceled(String barcode) {
+        ItemData itemData = new ItemData(barcode);
+        JSONObject jsonScfItemObject = null;
+        String institution = null;
+        try {
+            jsonScfItemObject = SCFUtil.getSCFItem(itemData);
+            institution = jsonScfItemObject.getJSONObject("item_data").getJSONObject("provenance").getString("value");
+        } catch (Exception e) {
+            logger.info("Can't get Request institution, Request Not Part Of SCF .Barcode: " + barcode);
+            return;
+        }
+        if (institution == null) {
+            logger.info("Can't get Request institution, Request Not Part Of SCF .Barcode: " + barcode);
+            return;
+        }
+        itemData.setInstitution(institution);
+        logger.info("Request source institution is :" + institution);
+        logger.info("Cancel Request. Source Institution Barcode: " + itemData.getBarcode());
+        JSONObject jsonInsItemObject = SCFUtil.getINSItem(itemData);
+        if (jsonInsItemObject == null) {
+            logger.info("Can't get institution item. Barcode: " + barcode);
+            return;
+        }
+        JSONObject jsonRequestsObject = SCFUtil.getItemRequests(jsonInsItemObject, itemData);
+        if (jsonRequestsObject == null) {
+            logger.info("Can't get institution requests. Barcode: " + barcode);
+            return;
+        }
+        String requestId = null;
+        for (int i = 0; i < jsonRequestsObject.getJSONArray("user_request").length(); i++) {
+            JSONObject request = jsonRequestsObject.getJSONArray("user_request").getJSONObject(i);
+            requestId = request.getString("request_id");
+            logger.info("Request id is :" + requestId);
+            SCFUtil.cancelItemRequest(jsonInsItemObject, itemData, requestId);
+        }
+
+        if (requestId == null) {
+            logger.error("Can't get SCF request id . Barcode: " + barcode);
+            return;
+        }
     }
 
     private static String getInstitutionByJobId(String jobId, String jobType) {
