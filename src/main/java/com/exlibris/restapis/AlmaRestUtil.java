@@ -22,7 +22,6 @@ public class AlmaRestUtil {
         try {
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-            con = (HttpURLConnection) obj.openConnection();
             con.setRequestMethod(method);
             con.setRequestProperty("Accept", "application/json");
             if (body != null) {
@@ -32,8 +31,6 @@ public class AlmaRestUtil {
                 } catch (Exception e) {
                     con.setRequestProperty("Content-Type", "application/xml");
                 }
-            }
-            if (body != null) {
                 con.setDoOutput(true);
                 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(con.getOutputStream(), "UTF-8"));
                 bw.write(body);
