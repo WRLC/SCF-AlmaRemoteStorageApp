@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.MarcFactory;
 import org.marc4j.marc.Record;
+import org.marc4j.marc.VariableField;
 
 import com.exlibris.util.SCFUtil;
 import com.exlibris.util.XmlUtil;
@@ -40,6 +41,9 @@ public class ItemsHandler {
                         df.addSubfield(factory.newSubfield('a', localNumber));
                         record.addVariableField(df);
                         String xmlRecord = XmlUtil.recordToMarcXml(record);
+                        for (VariableField avaField : record.getVariableFields("AVA")) {
+                            record.removeVariableField(avaField);
+                        }
                         if (xmlRecord == null) {
                             logger.error(
                                     "Missing Network Number - Can't find SCF bib - Can't create Local Bib and Holding - Exiting");
