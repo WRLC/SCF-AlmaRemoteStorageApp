@@ -43,6 +43,7 @@ public class WebhookServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse resp) throws ServletException, IOException {
 
+        request.setCharacterEncoding("UTF-8");
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
 
         String str;
