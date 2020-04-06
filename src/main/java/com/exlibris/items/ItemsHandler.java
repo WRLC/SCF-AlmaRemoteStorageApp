@@ -40,10 +40,11 @@ public class ItemsHandler {
                         String localNumber = "(" + itemData.getInstitution() + ")" + itemData.getMmsId();
                         df.addSubfield(factory.newSubfield('a', localNumber));
                         record.addVariableField(df);
-                        String xmlRecord = XmlUtil.recordToMarcXml(record);
                         for (VariableField avaField : record.getVariableFields("AVA")) {
                             record.removeVariableField(avaField);
                         }
+                        String xmlRecord = XmlUtil.recordToMarcXml(record);
+
                         if (xmlRecord == null) {
                             logger.error(
                                     "Missing Network Number - Can't find SCF bib - Can't create Local Bib and Holding - Exiting");
