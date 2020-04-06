@@ -19,6 +19,7 @@ import com.exlibris.restapis.HttpResponse;
 import com.exlibris.restapis.ItemApi;
 import com.exlibris.restapis.LoanApi;
 import com.exlibris.restapis.RequestApi;
+import com.exlibris.restapis.UserApi;
 
 public class SCFUtil {
 
@@ -486,6 +487,244 @@ public class SCFUtil {
         } else {
             logger.warn("Can't cancel SCF Item Requests. Barcode : " + itemData.getBarcode());
         }
+    }
+
+    public static JSONObject getINSRequest(ItemData itemData) {
+        logger.debug(
+                "get institution : " + itemData.getInstitution() + " Request. Request id : " + itemData.getRequestId());
+
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String baseUrl = props.get("gateway").toString();
+        String institutionApiKey = null;
+        for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
+            JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
+            if (inst.get("code").toString().equals(itemData.getInstitution())) {
+                institutionApiKey = inst.getString("apikey");
+                break;
+            }
+        }
+
+        HttpResponse requestsResponce = RequestApi.getRequest(itemData.getMmsId(), itemData.getRequestId(), baseUrl,
+                institutionApiKey);
+        if (requestsResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
+            logger.warn("Can't get SCF Item Requests. Barcode : " + itemData.getBarcode());
+            return null;
+        }
+        JSONObject jsonRequestsObject = new JSONObject(requestsResponce.getBody());
+        return jsonRequestsObject;
+    }
+
+    public static JSONObject createSCFUser(ItemData requestData, String userId, String userSourceInstitution) {
+        logger.debug("create SCF User. User Id : " + userId + " User Source Institution : " + userSourceInstitution);
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String baseUrl = props.get("gateway").toString();
+        String remoteStorageApikey = props.get("remote_storage_apikey").toString();
+        HttpResponse userResponce = UserApi.createLinkedUser(userId, userSourceInstitution, "<user></user>", baseUrl,
+                remoteStorageApikey);
+        if (userResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
+            logger.warn("Can't create SCF User. User id : " + userId);
+            return null;
+        }
+        try {
+            return new JSONObject(userResponce.getBody());
+        } catch (Exception e) {
+            return null;
+        }
+
+    }
+
+    private static JSONObject getDigitizationRequestObj() {
+        JSONObject jsonRequest = new JSONObject();
+        jsonRequest.put("request_type", "DIGITIZATION");
+        JSONObject jsonRequestSubType = new JSONObject();
+        jsonRequestSubType.put("value", "PHYSICAL_TO_DIGITIZATION");
+        jsonRequestSubType.put("desc", "Patron digitization request");
+        jsonRequest.put("request_sub_type", jsonRequestSubType);
+        JSONObject jsonTargetDestination = new JSONObject();
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String digitizationDepartment = props.get("remote_storage_digitization_department").toString();
+        jsonTargetDestination.put("value", digitizationDepartment);
+        jsonTargetDestination.put("desc", "Digitization Department For Institution");
+        jsonRequest.put("target_destination", jsonTargetDestination);
+        return jsonRequest;
+    }
+
+    public static JSONObject createSCFDigitizationRequest(JSONObject jsonUserObject, JSONObject jsonRequestObject,
+            JSONObject jsonItemObject, ItemData requestData) {
+
+        logger.debug("create SCF Digitization Request. Barcode: "
+                + jsonItemObject.getJSONObject("item_data").getString("barcode"));
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String remoteStorageApikey = props.get("remote_storage_apikey").toString();
+        String baseUrl = props.get("gateway").toString();
+
+        String primaryId = jsonUserObject.getString("primary_id");
+        String mmsId = jsonItemObject.getJSONObject("bib_data").getString("mms_id");
+        String holdingId = jsonItemObject.getJSONObject("holding_data").getString("holding_id");
+        String itemPid = jsonItemObject.getJSONObject("item_data").getString("pid");
+
+        JSONObject jsonRequest = getDigitizationRequestObj();
+        jsonRequest.put("user_primary_id", primaryId);
+        jsonRequest.put("copyrights_declaration_signed_by_patron",
+                jsonRequestObject.get("copyrights_declaration_signed_by_patron"));
+        jsonRequest.put("description", jsonRequestObject.get("description"));
+        jsonRequest.put("comment", jsonRequestObject.get("comment"));
+        jsonRequest.put("partial_digitization", jsonRequestObject.get("partial_digitization"));
+        if (jsonRequestObject.has("required_pages_range")) {
+            jsonRequest.put("required_pages_range", jsonRequestObject.get("required_pages_range"));
+        }
+        if (jsonRequestObject.has("full_chapter")) {
+            jsonRequest.put("full_chapter", jsonRequestObject.get("full_chapter"));
+        }
+        if (jsonRequestObject.has("manual_description")) {
+            jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
+        }
+        HttpResponse requestResponse = RequestApi.createRequest(mmsId, holdingId, itemPid, baseUrl, remoteStorageApikey,
+                jsonRequest.toString(), primaryId);
+        if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
+            logger.warn("Can't create SCF request. Itewm Pid : " + itemPid);
+            return null;
+        }
+        JSONObject jsonRequestsObject = null;
+        try {
+            jsonRequestsObject = new JSONObject(requestResponse.getBody());
+        } catch (Exception e) {
+            logger.warn("Can't create SCF request. Item Pid : " + itemPid);
+        }
+        return jsonRequestsObject;
+    }
+
+    public static void cancelTitleRequest(ItemData requestData) {
+        logger.debug("get institution : " + requestData.getInstitution() + " Request. Request id : "
+                + requestData.getRequestId());
+
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String baseUrl = props.get("gateway").toString();
+        String institutionApiKey = null;
+        for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
+            JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
+            if (inst.get("code").toString().equals(requestData.getInstitution())) {
+                institutionApiKey = inst.getString("apikey");
+                break;
+            }
+        }
+
+        HttpResponse requestsResponce = RequestApi.cancleTitleRequest(requestData.getMmsId(),
+                requestData.getRequestId(), "RequestSwitched", "Request will be handled by the remote storage.",
+                baseUrl, institutionApiKey);
+        if (requestsResponce.getResponseCode() == HttpsURLConnection.HTTP_NO_CONTENT) {
+            logger.info("successfully canceled Title Requests. Mms Id : " + requestData.getMmsId() + " Institution : "
+                    + requestData.getInstitution());
+        } else {
+            logger.warn("Can't cancel Title Requests. Mms Id : " + requestData.getMmsId() + " Institution : "
+                    + requestData.getInstitution());
+        }
+    }
+
+    public static JSONObject getSCFUser(ItemData requestData, String userId, String institution) {
+        logger.debug("get SCF User. User Id : " + userId);
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String baseUrl = props.get("gateway").toString();
+        String remoteStorageApikey = props.get("remote_storage_apikey").toString();
+        HttpResponse userResponce = UserApi.getLinkedUser(userId, institution, baseUrl, remoteStorageApikey);
+        if (userResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
+            logger.warn("Can't get SCF User. User id : " + userId);
+            return null;
+        }
+        try {
+            return new JSONObject(userResponce.getBody());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static JSONObject getINSUser(ItemData requestData, String userId, String userIdType, String institution) {
+        logger.info("get SCF User. User Id : " + userId + " Institution code : " + institution);
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String baseUrl = props.get("gateway").toString();
+        String institutionApiKey = null;
+        for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
+            JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
+            if (inst.get("code").toString().equals(institution)) {
+                institutionApiKey = inst.getString("apikey");
+                break;
+            }
+        }
+        HttpResponse userResponce = UserApi.getUser(userId, userIdType, baseUrl, institutionApiKey);
+        if (userResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
+            logger.warn("Can't get institutions " + requestData.getInstitution() + " User. User id : " + userId);
+            return null;
+        }
+        try {
+            return new JSONObject(userResponce.getBody());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static JSONObject createSCFDigitizationUserRequest(JSONObject jsonUserObject, JSONObject jsonRequestObject,
+            ItemData requestData) {
+        logger.debug("create SCF Digitization Request. User Id: " + jsonUserObject.getString("primary_id"));
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String remoteStorageApikey = props.get("remote_storage_apikey").toString();
+        String baseUrl = props.get("gateway").toString();
+
+        String primaryId = jsonUserObject.getString("primary_id");
+        String mmsId = jsonRequestObject.getString("mms_id");
+
+        JSONObject jsonRequest = getDigitizationRequestObj();
+        jsonRequest.put("user_primary_id", primaryId);
+        jsonRequest.put("copyrights_declaration_signed_by_patron",
+                jsonRequestObject.get("copyrights_declaration_signed_by_patron"));
+        jsonRequest.put("description", jsonRequestObject.get("description"));
+        jsonRequest.put("comment", jsonRequestObject.get("comment"));
+        jsonRequest.put("partial_digitization", jsonRequestObject.get("partial_digitization"));
+        if (jsonRequestObject.has("required_pages_range")) {
+            jsonRequest.put("required_pages_range", jsonRequestObject.get("required_pages_range"));
+        }
+        if (jsonRequestObject.has("full_chapter")) {
+            jsonRequest.put("full_chapter", jsonRequestObject.get("full_chapter"));
+        }
+        if (jsonRequestObject.has("manual_description")) {
+            jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
+        }
+        HttpResponse requestResponse = RequestApi.createBibRequest(mmsId, baseUrl, remoteStorageApikey,
+                jsonRequest.toString(), primaryId);
+        if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
+            logger.warn("Can't create SCF request. Mms Id : " + mmsId + " User Id : " + primaryId);
+            return null;
+        }
+        JSONObject jsonRequestsObject = null;
+        try {
+            jsonRequestsObject = new JSONObject(requestResponse.getBody());
+        } catch (Exception e) {
+            logger.warn("Can't create SCF request. Mms Id : " + mmsId + " User Id : " + primaryId);
+        }
+        return jsonRequestsObject;
+    }
+
+    public static JSONObject getINSUserRequest(ItemData requestData) {
+        logger.debug("get institution : " + requestData.getInstitution() + " User Request. Request id : "
+                + requestData.getRequestId());
+
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String baseUrl = props.get("gateway").toString();
+        String institutionApiKey = null;
+        for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
+            JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
+            if (inst.get("code").toString().equals(requestData.getInstitution())) {
+                institutionApiKey = inst.getString("apikey");
+                break;
+            }
+        }
+        HttpResponse requestsResponce = UserApi.getUserRequest(requestData.getUserId(), requestData.getRequestId(),
+                baseUrl, institutionApiKey);
+        if (requestsResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
+            logger.warn("Can't get SCF User Requests. User Id : " + requestData.getUserId());
+            return null;
+        }
+        JSONObject jsonRequestsObject = new JSONObject(requestsResponce.getBody());
+        return jsonRequestsObject;
     }
 
 }

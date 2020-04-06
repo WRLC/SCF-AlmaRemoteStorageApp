@@ -1,8 +1,5 @@
 package com.exlibris.webhook;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -195,7 +192,8 @@ public class ManageWebHookMessages {
         for (int i = 0; i < institutions.length(); i++) {
             if (!institutions.getJSONObject(i).getString("code").equals(props.getString("remote_storage_inst"))) {
                 try {
-                    if (institutions.getJSONObject(i).getString(jobType).equals(jobId)) {
+                    if (institutions.getJSONObject(i).has(jobType)
+                            && institutions.getJSONObject(i).getString(jobType).equals(jobId)) {
                         return institutions.getJSONObject(i).getString("code");
                     }
                 } catch (JSONException e) {

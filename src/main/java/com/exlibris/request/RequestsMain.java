@@ -54,8 +54,19 @@ public class RequestsMain {
                 String content = new String(Files.readAllBytes(xmlFile.toPath()));
                 List<ItemData> requestList = ItemData.xmlStringToRequestData(content, institution);
                 for (ItemData request : requestList) {
+                    if (request.getBarcode().contains(" ") || request.getBarcode().contains(":")) {
+                        if (request.getUserId() != null
+                                && request.getRequestType().equals("PHYSICAL_TO_DIGITIZATION")) {
+                            RequestHandler.createDigitizationUserRequest(request);
+                        }
+                        continue;
+                    }
                     if (request.getBarcode() != null && !request.getBarcode().isEmpty()) {
-                        RequestHandler.createItemRequest(request);
+                        if (request.getRequestType().equals("PHYSICAL_TO_DIGITIZATION")) {
+                            RequestHandler.createDigitizationItemRequest(request);
+                        } else {
+                            RequestHandler.createItemRequest(request);
+                        }
                     } else {
                         RequestHandler.createBibRequest(request);
                     }

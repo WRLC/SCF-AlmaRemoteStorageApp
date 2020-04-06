@@ -32,6 +32,9 @@ public class ItemData {
     private String description;
     private String note;
     private Record record;
+    private String requestType;
+    private String requestId;
+    private String userId;
 
     public ItemData(String mmsId, String barcode, String institution, String library, String location,
             String networkNumber, String note) {
@@ -56,6 +59,10 @@ public class ItemData {
         return mmsId;
     }
 
+    public void setMmsId(String mmsId) {
+        this.mmsId = mmsId;
+    }
+
     public String getNote() {
         return note;
     }
@@ -64,12 +71,13 @@ public class ItemData {
         return description;
     }
 
-    public ItemData(String barcode, String institution, String mmsId, String description, String library) {
+    public ItemData(String barcode, String institution, String mmsId, String description, String library, String type) {
         this.barcode = barcode;
         this.institution = institution;
         this.mmsId = mmsId;
         this.description = description;
         this.library = library;
+        this.requestType = type;
     }
 
     public String getBarcode() {
@@ -102,6 +110,26 @@ public class ItemData {
 
     public void setRecord(Record record) {
         this.record = record;
+    }
+
+    public String getRequestType() {
+        return requestType;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public static ItemData dataFieldToItemData(String mmsId, DataField dataField, String institution, String nZMmsId) {
@@ -144,8 +172,22 @@ public class ItemData {
                 library = element.getElementsByTagName("xb:libraryCode").item(0) == null ? null
                         : element.getElementsByTagName("xb:libraryCode").item(0).getTextContent();
             }
-
-            requestDataList.add(new ItemData(barcode, libraryInstitution, mmsId, description, library));
+            String type = element.getElementsByTagName("xb:requestType").item(0) == null ? ""
+                    : element.getElementsByTagName("xb:requestType").item(0).getTextContent();
+            ItemData itemData = new ItemData(barcode, libraryInstitution, mmsId, description, library, type);
+            if (type.equals("PHYSICAL_TO_DIGITIZATION")) {
+                String id = element.getElementsByTagName("xb:requestId").item(0) == null ? ""
+                        : element.getElementsByTagName("xb:requestId").item(0).getTextContent();
+                itemData.setRequestId(id);
+                itemData.setInstitution(institution);
+                try {
+                    String userId = ((Element) element.getElementsByTagName("xb:patronInfo").item(0))
+                            .getElementsByTagName("xb:patronIdentifier").item(0).getTextContent();
+                    itemData.setUserId(userId);
+                } catch (Exception e) {
+                }
+            }
+            requestDataList.add(itemData);
         }
 
         return requestDataList;

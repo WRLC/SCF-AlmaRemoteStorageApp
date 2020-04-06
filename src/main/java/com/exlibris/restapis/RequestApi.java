@@ -63,7 +63,7 @@ public class RequestApi {
             String reason, String note, String baseUrl, String apiKey) {
 
         logger.info("Starting to handle cancel request, request id: " + requestId + ".");
-        logger.info("item Id: " + itemPid + " - calling GET");
+        logger.info("item Id: " + itemPid + " - calling DELETE");
 
         String url = baseUrl + "/almaws/v1/bibs/" + mmsId + "/holdings/" + holdingId + "/items/" + itemPid
                 + "/requests/" + requestId + "?reason=" + reason + "&note=" + encodeValue(note) + "&apikey=" + apiKey;
@@ -78,6 +78,28 @@ public class RequestApi {
         } catch (Exception ex) {
             return "";
         }
+    }
+
+    public static HttpResponse getRequest(String mmsId, String requestId, String baseUrl, String apiKey) {
+        logger.info("Starting to handle retrieve request mms id: " + mmsId + ".");
+        logger.info("request Id: " + requestId + " - calling GET");
+
+        String url = baseUrl + "/almaws/v1/bibs/" + mmsId + "/requests/" + requestId + "?apikey=" + apiKey;
+        HttpResponse requestResponse = AlmaRestUtil.sendHttpReq(url, "GET", null);
+
+        return requestResponse;
+    }
+
+    public static HttpResponse cancleTitleRequest(String mmsId, String requestId, String reason, String note,
+            String baseUrl, String apiKey) {
+        logger.info("Starting to handle cancel request, request id: " + requestId + ".");
+        logger.info("Mms Id: " + mmsId + " - calling DLETE");
+
+        String url = baseUrl + "/almaws/v1/bibs/" + mmsId + "/requests/" + requestId + "?reason="
+                + "ResourceFoundInInstitution" + "&note=" + encodeValue("note") + "&apikey=" + apiKey;
+
+        HttpResponse requestResponse = AlmaRestUtil.sendHttpReq(url, "DELETE", null);
+        return requestResponse;
     }
 
 }

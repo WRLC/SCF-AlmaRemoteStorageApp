@@ -6,7 +6,7 @@ Access to the Developer Network for all member institutions, including the remot
 
 ### For All Institutions:
 1. FTP connection configuration - To share files between the App and Alma with a  [sub-directory](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/050Administration/050Configuring_General_Alma_Functions/050External_Systems#UpdateSubmissionFormatFtp) for each institution (the directory name should include the institution code. e.g. main_folder/01AAA_ABC).
-2. API-key with r/w permission for Bibs + Conf
+2. API-key with r/w permission for Bibs + Conf + Users
 3. Remote Storage Facility - To export all requests to remote storage
     - Create an [integration profile](https://developers.exlibrisgroup.com/alma/integrations/remote_storage/xml_based/)  of “remote storage” type. “Export File Path“ is "requests".
     - Create a [Remote Storage](https://knowledge.exlibrisgroup.com/Alma/Product_Documentation/010Alma_Online_Help_(English)/030Fulfillment/080Configuring_Fulfillment/040Configuring_Remote_Storage_Facilities) connected to your integration profile.
