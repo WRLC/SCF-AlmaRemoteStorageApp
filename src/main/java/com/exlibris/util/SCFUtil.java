@@ -568,7 +568,12 @@ public class SCFUtil {
         jsonRequest.put("copyrights_declaration_signed_by_patron",
                 jsonRequestObject.get("copyrights_declaration_signed_by_patron"));
         jsonRequest.put("description", jsonRequestObject.get("description"));
-        jsonRequest.put("comment", jsonRequestObject.get("comment"));
+        String comment = "";
+        if (jsonRequestObject.has("comment") && !jsonRequestObject.get("comment").equals(null)) {
+            comment = jsonRequestObject.getString("comment") + " ";
+        }
+        comment += "The inventory for this request should come from " + requestData.getInstitution();
+        jsonRequest.put("comment", comment);
         jsonRequest.put("partial_digitization", jsonRequestObject.get("partial_digitization"));
         if (jsonRequestObject.has("required_pages_range")) {
             jsonRequest.put("required_pages_range", jsonRequestObject.get("required_pages_range"));
@@ -677,7 +682,12 @@ public class SCFUtil {
         jsonRequest.put("copyrights_declaration_signed_by_patron",
                 jsonRequestObject.get("copyrights_declaration_signed_by_patron"));
         jsonRequest.put("description", jsonRequestObject.get("description"));
-        jsonRequest.put("comment", jsonRequestObject.get("comment"));
+        String comment = "";
+        if (jsonRequestObject.has("comment") && !jsonRequestObject.get("comment").equals(null)) {
+            comment = jsonRequestObject.getString("comment") + " ";
+        }
+        comment += "The inventory for this request should come from " + requestData.getInstitution();
+        jsonRequest.put("comment", comment);
         jsonRequest.put("partial_digitization", jsonRequestObject.get("partial_digitization"));
         if (jsonRequestObject.has("required_pages_range")) {
             jsonRequest.put("required_pages_range", jsonRequestObject.get("required_pages_range"));
@@ -725,6 +735,18 @@ public class SCFUtil {
         }
         JSONObject jsonRequestsObject = new JSONObject(requestsResponce.getBody());
         return jsonRequestsObject;
+    }
+
+    public static String getDefaultLibrary(String institution) {
+        logger.info("getting a default library for institution : " + institution);
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
+            JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
+            if (inst.get("code").toString().equals(institution)) {
+                return inst.has("default_library") ? inst.getString("default_library") : null;
+            }
+        }
+        return null;
     }
 
 }

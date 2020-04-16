@@ -17,9 +17,9 @@ public class RequestApi {
 
         String url = baseurl + "/almaws/v1/bibs/" + mmsId + "/holdings/" + holdingId + "/items/" + itemId
                 + "/requests?user_id=" + userId + "&apikey=" + apiKey;
-        HttpResponse bibResponse = AlmaRestUtil.sendHttpReq(url, "POST", body);
+        HttpResponse requestResponse = AlmaRestUtil.sendHttpReq(url, "POST", body);
 
-        return bibResponse;
+        return requestResponse;
     }
 
     public static HttpResponse getRequest(String mmsId, String holdingId, String itemId, String requestId,

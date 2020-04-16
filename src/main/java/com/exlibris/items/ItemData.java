@@ -7,6 +7,7 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.log4j.Logger;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.Record;
 import org.w3c.dom.Document;
@@ -15,8 +16,11 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import com.exlibris.library.LibraryHandler;
+import com.exlibris.util.SCFUtil;
 
 public class ItemData {
+
+    final private static Logger logger = Logger.getLogger(ItemData.class);
 
     final static String BARCODE_SUB_FIELD = "b";
     final static String LIBRARY_SUB_FIELD = "c";
@@ -156,6 +160,8 @@ public class ItemData {
                     : element.getElementsByTagName("xb:description").item(0).getTextContent();
             String mmsId = element.getElementsByTagName("xb:mmsId").item(0) == null ? null
                     : element.getElementsByTagName("xb:mmsId").item(0).getTextContent();
+            String type = element.getElementsByTagName("xb:requestType").item(0) == null ? ""
+                    : element.getElementsByTagName("xb:requestType").item(0).getTextContent();
             String library = null;
             String libraryInstitution = institution;
             if (element.getElementsByTagName("xb:institutionCode").item(0) != null) {
@@ -167,13 +173,27 @@ public class ItemData {
                             .getElementsByTagName("xb:library").item(0).getTextContent();
                     library = LibraryHandler.getLibraryCode(libraryInstitution, libraryName);
                 } catch (Exception e) {
+                    logger.debug("failed to get library by library name for institution " + libraryInstitution + ","
+                            + e.getMessage());
                 }
             } else {
                 library = element.getElementsByTagName("xb:libraryCode").item(0) == null ? null
                         : element.getElementsByTagName("xb:libraryCode").item(0).getTextContent();
             }
-            String type = element.getElementsByTagName("xb:requestType").item(0) == null ? ""
-                    : element.getElementsByTagName("xb:requestType").item(0).getTextContent();
+            if (library == null && libraryInstitution.equals(institution) && !type.equals("PHYSICAL_TO_DIGITIZATION")) {
+                String libraryName = null;
+                try {
+                    libraryName = ((Element) element.getElementsByTagName("xb:pickup").item(0))
+                            .getElementsByTagName("xb:library").item(0).getTextContent();
+                    library = LibraryHandler.getLibraryCode(libraryInstitution, libraryName);
+                } catch (Exception e) {
+                    logger.debug("failed to get library by library name, " + e.getMessage());
+                }
+            }
+            if (library == null) {
+                library = SCFUtil.getDefaultLibrary(libraryInstitution);
+            }
+
             ItemData itemData = new ItemData(barcode, libraryInstitution, mmsId, description, library, type);
             if (type.equals("PHYSICAL_TO_DIGITIZATION")) {
                 String id = element.getElementsByTagName("xb:requestId").item(0) == null ? ""
