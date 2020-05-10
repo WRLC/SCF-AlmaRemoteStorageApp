@@ -13,6 +13,7 @@ import com.exlibris.ftp.FTPClient;
 import com.exlibris.ftp.FTPUtil;
 import com.exlibris.ftp.SFTPUtil;
 import com.exlibris.items.ItemData;
+import com.exlibris.logger.ReportUtil;
 
 public class RequestsMain {
 
@@ -78,8 +79,9 @@ public class RequestsMain {
             logger.info("Total Records from FTP: " + totalRecords);
 
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            ReportUtil.getInstance().appendReport("RequestHandler", "", institution,
+                    "Failed to handle requests" + e.getMessage());
+            logger.error(e.getMessage());
         }
     }
 }

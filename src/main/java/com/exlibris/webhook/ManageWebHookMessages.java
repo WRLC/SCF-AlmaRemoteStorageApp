@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import com.exlibris.configuration.ConfigurationHandler;
 import com.exlibris.items.ItemData;
 import com.exlibris.items.ItemsMain;
+import com.exlibris.logger.ReportUtil;
 import com.exlibris.request.RequestsMain;
 import com.exlibris.util.SCFUtil;
 
@@ -181,7 +182,9 @@ public class ManageWebHookMessages {
         }
 
         if (requestId == null) {
-            logger.error("Can't get SCF request id . Barcode: " + barcode);
+            String message = "Can't get SCF request id . Barcode: " + barcode;
+            ReportUtil.getInstance().appendReport("RequestCanceled", barcode, institution, message);
+            logger.error(message);
             return;
         }
     }

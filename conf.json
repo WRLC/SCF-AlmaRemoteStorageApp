@@ -1,7 +1,8 @@
 {
 	"gateway": "https://api-na.hosted.exlibrisgroup.com",
 	"main_local_folder": "/tmp",
-	"max_number_of_threds" :"4",
+	"report_file_folder" : "/file/path",
+	"max_number_of_threads" :"4",
 	"ftp_server": {
 					"host": "my.ftp.server",
 					"user": "user",

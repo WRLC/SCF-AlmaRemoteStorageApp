@@ -9,6 +9,7 @@ import org.marc4j.marc.MarcFactory;
 import org.marc4j.marc.Record;
 import org.marc4j.marc.VariableField;
 
+import com.exlibris.logger.ReportUtil;
 import com.exlibris.util.SCFUtil;
 import com.exlibris.util.XmlUtil;
 
@@ -46,11 +47,20 @@ public class ItemsHandler {
                         String xmlRecord = XmlUtil.recordToMarcXml(record);
 
                         if (xmlRecord == null) {
-                            logger.error(
-                                    "Missing Network Number - Can't find SCF bib - Can't create Local Bib and Holding - Exiting");
+                            String message = "Missing Network Number - Can't find SCF bib - Can't create Local Bib and Holding - Exiting";
+                            logger.error(message);
+                            ReportUtil.getInstance().appendReport("ItemsHandler", itemData.getBarcode(),
+                                    itemData.getInstitution(), message);
                             return;
                         }
                         jsonBibObject = SCFUtil.createSCFBibByINST(itemData, "<bib>" + xmlRecord + "</bib>");
+                        if (jsonBibObject == null) {
+                            String message = "The Bib does not exist in the remote Storage - Can't create bib - Exiting";
+                            logger.error(message);
+                            ReportUtil.getInstance().appendReport("ItemsHandler", itemData.getBarcode(),
+                                    itemData.getInstitution(), message);
+                            return;
+                        }
                         mmsId = jsonBibObject.getString("mms_id");
                     } else {
                         logger.debug(
@@ -66,7 +76,10 @@ public class ItemsHandler {
                         logger.debug("The Bib does not exist in the remote Storage - Creating Bib and Holding");
                         jsonBibObject = SCFUtil.createSCFBibByNZ(itemData);
                         if (jsonBibObject == null) {
-                            logger.error("The Bib does not exist in the remote Storage - Can't create bib - Exiting");
+                            String message = "The Bib does not exist in the remote Storage - Can't create bib - Exiting";
+                            logger.error(message);
+                            ReportUtil.getInstance().appendReport("ItemsHandler", itemData.getBarcode(),
+                                    itemData.getInstitution(), message);
                             return;
                         }
                         mmsId = jsonBibObject.getString("mms_id");
@@ -91,6 +104,10 @@ public class ItemsHandler {
                     }
                     logger.debug("Loan the new Item who was created");
                     SCFUtil.createSCFLoan(itemData, itemPid);
+                } else {
+                    String message = "Can't create SCF holding. MMS ID : " + mmsId;
+                    ReportUtil.getInstance().appendReport("ItemsHandler", itemData.getBarcode(),
+                            itemData.getInstitution(), message);
                 }
             }
         } else {

@@ -13,6 +13,7 @@ import org.marc4j.marc.VariableField;
 
 import com.exlibris.configuration.ConfigurationHandler;
 import com.exlibris.items.ItemData;
+import com.exlibris.logger.ReportUtil;
 import com.exlibris.restapis.BibApi;
 import com.exlibris.restapis.HoldingApi;
 import com.exlibris.restapis.HttpResponse;
@@ -28,6 +29,15 @@ public class SCFUtil {
 
     public static String getSCFHoldingFromRecordAVA(String record) {
         try {
+            // no AVA fields
+            if (!record.contains("tag=\"AVA\"")) {
+                return null;
+            }
+            JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+            String remoteStorageInst = props.getString("remote_storage_inst");
+            String remoteStorageHoldingLibrary = props.getString("remote_storage_holding_library");
+            String remoteStorageHoldingLocation = props.getString("remote_storage_holding_location");
+            JSONArray institutions = props.getJSONArray("institutions");
             String r = XmlUtil.recordXmlToMarcXml(record);
             List<Record> Marcrecord = XmlUtil.xmlStringToMarc4jRecords(r);
             List<VariableField> variableFields = Marcrecord.get(0).getVariableFields("AVA");
@@ -35,12 +45,18 @@ public class SCFUtil {
                 String holdingsID = ((DataField) variableField).getSubfieldsAsString("8");
                 String library = ((DataField) variableField).getSubfieldsAsString("b");
                 String location = ((DataField) variableField).getSubfieldsAsString("j");
-                JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
-                String remote_storage_inst = props.getString("remote_storage_inst");
-                JSONArray institutions = props.getJSONArray("institutions");
+                // if it's the default remote_storage_holding_library
+                // and remote_storage_holding_location
+                if (library.equals(remoteStorageHoldingLibrary)) {
+                    if (location.equals(remoteStorageHoldingLocation)) {
+                        return holdingsID;
+                    }
+                }
+                // check if one of library locations is in the institution
+                // configuration
                 for (int i = 0; i < institutions.length(); i++) {
                     JSONObject inst = institutions.getJSONObject(i);
-                    if (inst.get("code").toString().equals(remote_storage_inst)) {
+                    if (inst.get("code").toString().equals(remoteStorageInst)) {
                         JSONArray libraries = inst.getJSONArray("libraries");
                         for (int j = 0; j < libraries.length(); j++) {
                             if (library.equals(libraries.getJSONObject(j).get("code").toString())) {
@@ -222,7 +238,9 @@ public class SCFUtil {
         HttpResponse itemResponse = ItemApi.createItem(mmsId, holdingId, baseUrl, remoteStorageApikey,
                 instItem.toString());
         if (itemResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
-            logger.warn("Can't create SCF item. Barcode : " + itemData.getBarcode());
+            ReportUtil.getInstance().appendReport("ItemsHandler", itemData.getBarcode(), itemData.getInstitution(),
+                    "Can't create SCF item. Barcode : " + itemData.getBarcode());
+            logger.warn("Can't create SCF item. Barcode : " + itemData.getBarcode() + " ." + itemResponse.getBody());
         }
         return new JSONObject(itemResponse.getBody());
     }
@@ -273,7 +291,11 @@ public class SCFUtil {
         HttpResponse itemResponse = ItemApi.updateItem(mmsId, holdingId, itemPid, baseUrl, remoteStorageApikey, body);
         if (itemResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             // "Can't update item";
-            logger.warn("Can't update SCF item. Barcode : " + itemData.getBarcode());
+            String message = "Can't update SCF item. Barcode : " + itemData.getBarcode() + ". "
+                    + itemResponse.getBody();
+            logger.warn(message);
+            ReportUtil.getInstance().appendReport("ItemsHandler", itemData.getBarcode(), itemData.getInstitution(),
+                    message);
         }
 
     }
@@ -315,8 +337,12 @@ public class SCFUtil {
 
         HttpResponse requestResponse = RequestApi.createRequest(mmsId, holdingId, itemPid, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), userId);
-        if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
-            logger.warn("Can't create SCF request. Itewm Pid : " + itemPid);
+        if (requestResponse.getResponseCode() != HttpsURLConnection.HTTP_OK) {
+            String message = "Can't create SCF request. Item Pid : " + itemPid + "." + requestResponse.getBody();
+            logger.error(message);
+            ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
+                    message);
+            return;
         }
     }
 
@@ -333,8 +359,13 @@ public class SCFUtil {
         jsonRequest.put("description", itemData.getDescription());
         HttpResponse requestResponse = RequestApi.createBibRequest(mmsId, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), userId);
-        if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
-            logger.warn("Can't create SCF request. Bib Id : " + jsonBibObject.getString("mms_id"));
+        if (requestResponse.getResponseCode() != HttpsURLConnection.HTTP_OK) {
+            String message = "Can't create SCF request. Bib Id : " + jsonBibObject.getString("mms_id") + ". "
+                    + requestResponse.getBody();
+            logger.error(message);
+            ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
+                    message);
+            return;
         }
 
     }
@@ -587,7 +618,7 @@ public class SCFUtil {
         HttpResponse requestResponse = RequestApi.createRequest(mmsId, holdingId, itemPid, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), primaryId);
         if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
-            logger.warn("Can't create SCF request. Itewm Pid : " + itemPid);
+            logger.warn("Can't create SCF request. Item Pid : " + itemPid);
             return null;
         }
         JSONObject jsonRequestsObject = null;
@@ -621,8 +652,11 @@ public class SCFUtil {
             logger.info("successfully canceled Title Requests. Mms Id : " + requestData.getMmsId() + " Institution : "
                     + requestData.getInstitution());
         } else {
-            logger.warn("Can't cancel Title Requests. Mms Id : " + requestData.getMmsId() + " Institution : "
-                    + requestData.getInstitution());
+            String message = "Can't cancel Title Requests. Mms Id : " + requestData.getMmsId() + " Institution : "
+                    + requestData.getInstitution();
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
+            logger.error(message);
         }
     }
 

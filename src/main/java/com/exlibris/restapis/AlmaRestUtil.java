@@ -64,8 +64,9 @@ public class AlmaRestUtil {
             } else {
                 try {
                     JSONObject jsonErrror = new JSONObject(out);
-                    logger.info("message: " + jsonErrror.getJSONObject("errorList").getJSONArray("error")
-                            .getJSONObject(0).getString("errorMessage"));
+                    out = jsonErrror.getJSONObject("errorList").getJSONArray("error").getJSONObject(0)
+                            .getString("errorMessage");
+                    logger.info("message: " + out);
                 } catch (Exception e) {
                     logger.info("message: " + out);
                 }

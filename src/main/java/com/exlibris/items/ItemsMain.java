@@ -20,6 +20,7 @@ import com.exlibris.configuration.ConfigurationHandler;
 import com.exlibris.ftp.FTPClient;
 import com.exlibris.ftp.FTPUtil;
 import com.exlibris.ftp.SFTPUtil;
+import com.exlibris.logger.ReportUtil;
 import com.exlibris.util.XmlUtil;
 
 class Task implements Runnable {
@@ -57,8 +58,8 @@ public class ItemsMain {
             if (props.has("main_local_folder") && props.get("main_local_folder") != null) {
                 mainLocalFolder = props.getString("main_local_folder") + "/" + MAINLOCALFOLDER;
             }
-            if (props.has("max_number_of_threds") && props.get("max_number_of_threds") != null) {
-                maxNumberOfThreds = Integer.valueOf(props.getString("max_number_of_threds"));
+            if (props.has("max_number_of_threads") && props.get("max_number_of_threads") != null) {
+                maxNumberOfThreds = Integer.valueOf(props.getString("max_number_of_threads"));
             }
             logger.info("Starting Merge Items With SCF For Institution: " + institution);
             logger.debug("empty the local folder");
@@ -148,13 +149,17 @@ public class ItemsMain {
                                 ItemData.class);
                         method.invoke(null, itemData);
                     } catch (Exception e) {
-                        logger.error("Failed to handle item " + itemData.getBarcode(), e);
+                        String message = "Failed to handle item " + itemData.getBarcode();
+                        ReportUtil.getInstance().appendReport("ItemsHandler", itemData.getBarcode(),
+                                itemData.getInstitution(), message);
+                        logger.error(message, e);
                     }
                 }
             }
             fileCounter.put(xmlFile.getName(), records.size());
             logger.info("Total records from file: " + xmlFile.getName() + " :" + records.size());
         } catch (Exception e) {
+            ReportUtil.getInstance().appendReport("ItemsHandler", xmlFile.getName(), institution, e.getMessage());
             logger.error(e.getMessage());
         }
     }

@@ -5,6 +5,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.exlibris.items.ItemData;
+import com.exlibris.logger.ReportUtil;
 import com.exlibris.util.SCFUtil;
 
 public class RequestHandler {
@@ -17,7 +18,11 @@ public class RequestHandler {
         if (jsonItemObject != null) {
             SCFUtil.createSCFRequest(jsonItemObject, requestData);
         } else {
-            logger.warn("Create Request Failed. Barcode: " + requestData.getBarcode() + "X Does not exist in SCF");
+            String message = "Create Request Failed. Barcode: " + requestData.getBarcode() + "X Does not exist in SCF";
+            logger.error(message);
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
+            return;
         }
     }
 
@@ -34,6 +39,12 @@ public class RequestHandler {
         } else {
             logger.debug("get SCF Bibbased on Local Institution MMS ID");
             jsonBibObject = SCFUtil.getSCFBibByINST(itemData);
+        }
+        if (jsonBibObject == null) {
+            String message = "Create Request Failed. Mms Id : " + itemData.getMmsId();
+            logger.error(message);
+            ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
+                    message);
         }
         SCFUtil.createSCFBibRequest(jsonBibObject, itemData);
     }
@@ -57,7 +68,10 @@ public class RequestHandler {
                     requestData.getInstitution());
             JSONObject jsonUserObject = null;
             if (jsonINSUserObject == null) {
+                String message = "Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode();
                 logger.error("Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode());
+                ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                        requestData.getInstitution(), message);
                 return;
             }
             String userLinkingId = userId;
@@ -72,8 +86,11 @@ public class RequestHandler {
                     if (jsonSourceUserObject != null) {
                         userLinkingId = jsonSourceUserObject.getString("primary_id");
                     } else {
-                        logger.error(
-                                "Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode());
+                        String message = "Failed to create Digitization Item Request. Barcode: "
+                                + requestData.getBarcode();
+                        logger.error(message);
+                        ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                                requestData.getInstitution(), message);
                         return;
                     }
                 }
@@ -85,7 +102,10 @@ public class RequestHandler {
                 jsonUserObject = SCFUtil.createSCFUser(requestData, userLinkingId, userSourceInstitution);
             }
             if (jsonUserObject == null) {
-                logger.error("Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode());
+                String message = "Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode();
+                logger.error(message);
+                ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                        requestData.getInstitution(), message);
                 return;
             }
             JSONObject jsonItemObject = SCFUtil.getSCFItem(requestData);
@@ -96,10 +116,18 @@ public class RequestHandler {
                     SCFUtil.cancelTitleRequest(requestData);
                 }
             } else {
-                logger.warn("Create Request Failed. Barcode: " + requestData.getBarcode());
+                String message = "Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode();
+                logger.error(message);
+                ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                        requestData.getInstitution(), message);
+                return;
             }
         } catch (Exception e) {
+            String message = "Create Request Failed. Barcode: " + requestData.getBarcode();
             logger.warn("Create Request Failed. Barcode: " + requestData.getBarcode());
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
+
         }
 
     }
@@ -112,7 +140,10 @@ public class RequestHandler {
                 requestData.getInstitution());
         JSONObject jsonUserObject = null;
         if (jsonINSUserObject == null) {
-            logger.error("Failed to create Digitization User Request. User Id : " + requestData.getUserId());
+            String message = "Failed to create Digitization User Request. User Id : " + requestData.getUserId();
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
+            logger.error(message);
             return;
         }
         String userLinkingId = userId;
@@ -127,7 +158,10 @@ public class RequestHandler {
                 if (jsonSourceUserObject != null) {
                     userLinkingId = jsonSourceUserObject.getString("primary_id");
                 } else {
-                    logger.error("Failed to create Digitization User Request. User Id : " + requestData.getUserId());
+                    String message = "Failed to create Digitization User Request. User Id : " + requestData.getUserId();
+                    ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                            requestData.getInstitution(), message);
+                    logger.error(message);
                     return;
                 }
             }
@@ -139,7 +173,10 @@ public class RequestHandler {
             jsonUserObject = SCFUtil.createSCFUser(requestData, userLinkingId, userSourceInstitution);
         }
         if (jsonUserObject == null) {
-            logger.error("Failed to create Digitization User Request. User Id : " + requestData.getUserId());
+            String message = "Failed to create Digitization User Request. User Id : " + requestData.getUserId();
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
+            logger.error(message);
             return;
         }
         JSONObject jsonDigitizationRequestObject = SCFUtil.createSCFDigitizationUserRequest(jsonUserObject,
@@ -147,6 +184,12 @@ public class RequestHandler {
         if (jsonDigitizationRequestObject != null) {
             requestData.setMmsId(jsonRequestObject.getString("mms_id"));
             SCFUtil.cancelTitleRequest(requestData);
+        } else {
+            String message = "Failed to create Digitization User Request." + requestData.getUserId();
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
+            logger.error(message);
+            return;
         }
 
     }
