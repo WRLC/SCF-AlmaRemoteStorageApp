@@ -13,7 +13,6 @@ import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
 import com.exlibris.configuration.ConfigurationHandler;
-import com.exlibris.start.Start;
 
 public class ReportUtil {
 
