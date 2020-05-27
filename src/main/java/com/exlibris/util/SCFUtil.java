@@ -85,12 +85,12 @@ public class SCFUtil {
         String networkNumber = itemData.getNetworkNumber();
         HttpResponse bibResponse = BibApi.retrieveBibsbyNZ(networkNumber, "full", "p_avail", baseUrl,
                 remoteStorageApikey);
-        JSONObject jsonBibObject = new JSONObject(bibResponse.getBody());
         if (bibResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.debug(
                     "No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : " + itemData.getBarcode());
             return null;
         }
+        JSONObject jsonBibObject = new JSONObject(bibResponse.getBody());
         return jsonBibObject;
     }
 
@@ -102,11 +102,11 @@ public class SCFUtil {
         String localNumber = "(" + itemData.getInstitution() + ")" + itemData.getMmsId();
         HttpResponse bibResponse = BibApi.retrieveBibsBySId(localNumber, "full", "p_avail", baseUrl,
                 remoteStorageApikey);
-        JSONObject jsonBibObject = new JSONObject(bibResponse.getBody());
         if (bibResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.debug("No bib found for System Id :" + localNumber + ". Barcode : " + itemData.getBarcode());
             return null;
         }
+        JSONObject jsonBibObject = new JSONObject(bibResponse.getBody());
         return jsonBibObject;
     }
 
@@ -116,11 +116,11 @@ public class SCFUtil {
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
         String baseUrl = props.get("gateway").toString();
         HttpResponse itemResponce = ItemApi.retrieveItem(itemData.getBarcode() + "X", baseUrl, remoteStorageApikey);
-        JSONObject jsonItemObject = new JSONObject(itemResponce.getBody());
         if (itemResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.debug("No items found . Barcode : " + itemData.getBarcode());
             return null;
         }
+        JSONObject jsonItemObject = new JSONObject(itemResponce.getBody());
         return jsonItemObject;
     }
 
@@ -161,11 +161,11 @@ public class SCFUtil {
 
         HttpResponse bibResponse = BibApi.createBibByNZ(itemData.getNetworkNumber(), null, "false", "true",
                 "<bib></bib>", baseUrl, remoteStorageApikey);
-        JSONObject jsonNewBibObject = new JSONObject(bibResponse.getBody());
         if (bibResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.warn("Can't create SCF bib. Barcode : " + itemData.getBarcode());
             return null;
         }
+        JSONObject jsonNewBibObject = new JSONObject(bibResponse.getBody());
         return jsonNewBibObject;
     }
 
@@ -182,11 +182,11 @@ public class SCFUtil {
         String holdingLoc = props.get("remote_storage_holding_location").toString();
         String holdingBody = HOL_XML_TEMPLATE.replace("_LIB_CODE_", holdingLib).replace("_LOC_CODE_", holdingLoc);
         HttpResponse holdingResponse = HoldingApi.createHolding(mmsId, holdingBody, baseUrl, remoteStorageApikey);
-        JSONObject jsonHoldingObject = new JSONObject(holdingResponse.getBody());
         if (holdingResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.warn("Can't create SCF holding. MMS ID : " + mmsId);
             return null;
         }
+        JSONObject jsonHoldingObject = new JSONObject(holdingResponse.getBody());
         return jsonHoldingObject.getString("holding_id");
     }
 
@@ -213,7 +213,10 @@ public class SCFUtil {
 
     public static String createSCFItemAndGetId(ItemData itemData, String mmsId, String holdingId) {
         JSONObject jsonItemObject = createSCFItem(itemData, mmsId, holdingId);
-        return jsonItemObject.getJSONObject("item_data").getString("pid");
+        if (jsonItemObject != null) {
+            return jsonItemObject.getJSONObject("item_data").getString("pid");
+        }
+        return null;
     }
 
     public static JSONObject createSCFItem(ItemData itemData, String mmsId, String holdingId) {
@@ -241,6 +244,7 @@ public class SCFUtil {
             ReportUtil.getInstance().appendReport("ItemsHandler", itemData.getBarcode(), itemData.getInstitution(),
                     "Can't create SCF item. Barcode : " + itemData.getBarcode());
             logger.warn("Can't create SCF item. Barcode : " + itemData.getBarcode() + " ." + itemResponse.getBody());
+            return null;
         }
         return new JSONObject(itemResponse.getBody());
     }
@@ -313,12 +317,12 @@ public class SCFUtil {
             }
         }
         HttpResponse itemResponce = BibApi.getBib(itemData.getMmsId(), "full", "None", baseUrl, institutionApiKey);
-        JSONObject jsonItemObject = new JSONObject(itemResponce.getBody());
         if (itemResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.warn("Can't get institution : " + itemData.getInstitution() + " Bib. MMS Id : "
                     + itemData.getNetworkNumber());
             return null;
         }
+        JSONObject jsonItemObject = new JSONObject(itemResponce.getBody());
         return jsonItemObject;
     }
 
@@ -460,11 +464,11 @@ public class SCFUtil {
         String baseUrl = props.get("gateway").toString();
 
         HttpResponse bibResponse = BibApi.createBibBySId("false", "true", body, baseUrl, remoteStorageApikey);
-        JSONObject jsonNewBibObject = new JSONObject(bibResponse.getBody());
         if (bibResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.warn("Can't create SCF Bib. Barcode : " + itemData.getBarcode());
             return null;
         }
+        JSONObject jsonNewBibObject = new JSONObject(bibResponse.getBody());
         return jsonNewBibObject;
     }
 
