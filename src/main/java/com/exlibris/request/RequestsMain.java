@@ -59,6 +59,10 @@ public class RequestsMain {
                         if (request.getUserId() != null
                                 && request.getRequestType().equals("PHYSICAL_TO_DIGITIZATION")) {
                             RequestHandler.createDigitizationUserRequest(request);
+                        } else {
+                            ReportUtil.getInstance().appendReport("RequestHandler", request.getBarcode(), institution,
+                                    "Failed to handle request - Barcode doesn't exist in the file : "
+                                            + xmlFile.getName());
                         }
                         continue;
                     }
