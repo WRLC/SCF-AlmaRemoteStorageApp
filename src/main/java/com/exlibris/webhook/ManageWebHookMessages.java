@@ -161,6 +161,7 @@ public class ManageWebHookMessages {
             return;
         }
         itemData.setInstitution(institution);
+        itemData.setSourceInstitution(institution);
         logger.info("Request source institution is :" + institution);
         logger.info("Cancel Request. Source Institution Barcode: " + itemData.getBarcode());
         JSONObject jsonInsItemObject = SCFUtil.getINSItem(itemData);
@@ -178,7 +179,8 @@ public class ManageWebHookMessages {
             JSONObject request = jsonRequestsObject.getJSONArray("user_request").getJSONObject(i);
             requestId = request.getString("request_id");
             logger.info("Request id is :" + requestId);
-            SCFUtil.cancelItemRequest(jsonInsItemObject, itemData, requestId);
+            SCFUtil.cancelItemRequest(jsonInsItemObject, itemData, requestId,
+                    "Remote storage cannot fulfill the request");
         }
 
         if (requestId == null) {

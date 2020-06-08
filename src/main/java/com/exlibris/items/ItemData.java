@@ -39,6 +39,7 @@ public class ItemData {
     private String requestType;
     private String requestId;
     private String userId;
+    private String sourceInstitution;
 
     public ItemData(String mmsId, String barcode, String institution, String library, String location,
             String networkNumber, String note) {
@@ -136,6 +137,14 @@ public class ItemData {
         this.userId = userId;
     }
 
+    public String getSourceInstitution() {
+        return sourceInstitution;
+    }
+
+    public void setSourceInstitution(String sourceInstitution) {
+        this.sourceInstitution = sourceInstitution;
+    }
+
     public static ItemData dataFieldToItemData(String mmsId, DataField dataField, String institution, String nZMmsId) {
         String barcode = dataField.getSubfieldsAsString(BARCODE_SUB_FIELD);
         String library = dataField.getSubfieldsAsString(LIBRARY_SUB_FIELD);
@@ -195,10 +204,13 @@ public class ItemData {
             }
 
             ItemData itemData = new ItemData(barcode, libraryInstitution, mmsId, description, library, type);
+
+            String id = element.getElementsByTagName("xb:requestId").item(0) == null ? ""
+                    : element.getElementsByTagName("xb:requestId").item(0).getTextContent();
+            itemData.setRequestId(id);
+            itemData.setSourceInstitution(institution);
+
             if (type.equals("PHYSICAL_TO_DIGITIZATION")) {
-                String id = element.getElementsByTagName("xb:requestId").item(0) == null ? ""
-                        : element.getElementsByTagName("xb:requestId").item(0).getTextContent();
-                itemData.setRequestId(id);
                 itemData.setInstitution(institution);
                 try {
                     String userId = ((Element) element.getElementsByTagName("xb:patronInfo").item(0))

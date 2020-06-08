@@ -499,7 +499,8 @@ public class SCFUtil {
         return jsonRequestsObject;
     }
 
-    public static void cancelItemRequest(JSONObject jsonItemObject, ItemData itemData, String requestId) {
+    public static HttpResponse cancelItemRequest(JSONObject jsonItemObject, ItemData itemData, String requestId,
+            String cancellationNote) {
         logger.debug("cancel item requests from SCF Item. Barcode : " + itemData.getBarcode());
 
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
@@ -516,12 +517,13 @@ public class SCFUtil {
         String holdingId = jsonItemObject.getJSONObject("holding_data").getString("holding_id");
         String itemPid = jsonItemObject.getJSONObject("item_data").getString("pid");
         HttpResponse requestResponce = RequestApi.cancelRequest(mmsId, holdingId, itemPid, requestId,
-                "CannotBeFulfilled", "Remote storage cannot fulfill the request", baseUrl, institutionApiKey);
+                "CannotBeFulfilled", cancellationNote, baseUrl, institutionApiKey);
         if (requestResponce.getResponseCode() == HttpsURLConnection.HTTP_NO_CONTENT) {
             logger.info("successfully canceled SCF Item Requests. Barcode : " + itemData.getBarcode());
         } else {
             logger.warn("Can't cancel SCF Item Requests. Barcode : " + itemData.getBarcode());
         }
+        return requestResponce;
     }
 
     public static JSONObject getINSRequest(ItemData itemData) {

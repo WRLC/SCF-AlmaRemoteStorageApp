@@ -1,11 +1,14 @@
 package com.exlibris.request;
 
+import javax.net.ssl.HttpsURLConnection;
+
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.exlibris.items.ItemData;
 import com.exlibris.logger.ReportUtil;
+import com.exlibris.restapis.HttpResponse;
 import com.exlibris.util.SCFUtil;
 
 public class RequestHandler {
@@ -16,6 +19,24 @@ public class RequestHandler {
         logger.info("Create Item Request. Barcode: " + requestData.getBarcode());
         JSONObject jsonItemObject = SCFUtil.getSCFItem(requestData);
         if (jsonItemObject != null) {
+            String processType = jsonItemObject.getJSONObject("item_data").getJSONObject("process_type")
+                    .getString("value");
+            if ("LOAN".equals(processType)) {
+                logger.info("Cancel Item Request. Barcode: " + requestData.getBarcode());
+                if (!requestData.getSourceInstitution().isEmpty()) {
+                    requestData.setInstitution(requestData.getSourceInstitution());
+                }
+                JSONObject jsonINSTItemObject = SCFUtil.getINSItem(requestData);
+                HttpResponse requestResponce = SCFUtil.cancelItemRequest(jsonINSTItemObject, requestData,
+                        requestData.getRequestId(), "Item is on loan");
+                if (requestResponce.getResponseCode() != HttpsURLConnection.HTTP_NO_CONTENT) {
+                    String message = "Can't cancel SCF Item Requests. Barcode : " + requestData.getBarcode();
+                    logger.error(message);
+                    ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                            requestData.getInstitution(), message);
+                }
+                return;
+            }
             SCFUtil.createSCFRequest(jsonItemObject, requestData);
         } else {
             String message = "Create Request Failed. Barcode: " + requestData.getBarcode() + "X Does not exist in SCF";
