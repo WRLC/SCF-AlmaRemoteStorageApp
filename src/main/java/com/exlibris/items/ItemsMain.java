@@ -61,6 +61,10 @@ public class ItemsMain {
             if (props.has("max_number_of_threads") && props.get("max_number_of_threads") != null) {
                 maxNumberOfThreds = Integer.valueOf(props.getString("max_number_of_threads"));
             }
+            boolean ignoreDeleteFiles = true;
+            if (props.has("ignore_delete_files") && props.get("ignore_delete_files") != null) {
+                ignoreDeleteFiles = Boolean.valueOf(props.getString("ignore_delete_files"));
+            }
             logger.info("Starting Merge Items With SCF For Institution: " + institution);
             logger.debug("empty the local folder");
             File tarGzFolder = new File(mainLocalFolder + "targz/");
@@ -86,6 +90,10 @@ public class ItemsMain {
             ExecutorService pool = Executors.newFixedThreadPool(maxNumberOfThreds);
             Map<String, Integer> fileCounter = new HashMap<String, Integer>();
             for (File xmlFile : xmlFiles) {
+                if (ignoreDeleteFiles && xmlFile.getName().toLowerCase().contains("_delete")) {
+                    logger.info("Ignoring deleted xml file: " + xmlFile.getName());
+                    continue;
+                }
                 logger.info("starting to hendle xml file: " + xmlFile.getName());
                 fileCounter.put(xmlFile.getName(), 0);
                 pool.execute(new Task(xmlFile, institution, fileCounter));
