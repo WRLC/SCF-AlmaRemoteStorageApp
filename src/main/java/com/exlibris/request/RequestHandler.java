@@ -22,7 +22,7 @@ public class RequestHandler {
             String processType = jsonItemObject.getJSONObject("item_data").getJSONObject("process_type")
                     .getString("value");
             if ("LOAN".equals(processType)) {
-                logger.info("Cancel Item Request. Barcode: " + requestData.getBarcode());
+                logger.info("Item is on loan - Canceling Item Request. Barcode: " + requestData.getBarcode());
                 if (!requestData.getSourceInstitution().isEmpty()) {
                     requestData.setInstitution(requestData.getSourceInstitution());
                 }
