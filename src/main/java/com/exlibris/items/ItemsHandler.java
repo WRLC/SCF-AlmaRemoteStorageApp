@@ -115,7 +115,7 @@ public class ItemsHandler {
             if (!SCFUtil.isItemInRemoteStorage(itemData)) {
                 logger.debug(
                         "Item exists in the SCF, but in the Institution it's no in a remote-storage location need to delete it from SCF");
-                SCFUtil.deleteSCFItem(jsonItemObject);
+                SCFUtil.deleteSCFItem(jsonItemObject, itemData);
             } else {
                 logger.debug("Item exists merge between INST item and SCF item");
                 SCFUtil.updateSCFItem(itemData, jsonItemObject);
@@ -128,7 +128,7 @@ public class ItemsHandler {
         JSONObject jsonItemObject = SCFUtil.getSCFItem(itemData);
         if (jsonItemObject != null) {
             logger.debug("The item exists in the remote Storage");
-            SCFUtil.deleteSCFItem(jsonItemObject);
+            SCFUtil.deleteSCFItem(jsonItemObject, itemData);
         }
 
     }

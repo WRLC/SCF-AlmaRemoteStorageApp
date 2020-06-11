@@ -27,6 +27,13 @@ public class RequestHandler {
                     requestData.setInstitution(requestData.getSourceInstitution());
                 }
                 JSONObject jsonINSTItemObject = SCFUtil.getINSItem(requestData);
+                if (jsonINSTItemObject == null) {
+                    String message = "Can't cancel SCF Item Request - Failed to retrieve institution item. Barcode : "
+                            + requestData.getBarcode();
+                    logger.error(message);
+                    ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                            requestData.getInstitution(), message);
+                }
                 HttpResponse requestResponce = SCFUtil.cancelItemRequest(jsonINSTItemObject, requestData,
                         requestData.getRequestId(), "Item is on loan");
                 if (requestResponce.getResponseCode() != HttpsURLConnection.HTTP_NO_CONTENT) {
@@ -51,6 +58,13 @@ public class RequestHandler {
         logger.info("Create Bib Request. Mms Id : " + itemData.getMmsId());
         logger.debug("get Institution Bib to get NZ MMS ID");
         JSONObject jsonINSBibObject = SCFUtil.getINSBib(itemData);
+        if (jsonINSBibObject == null) {
+            String message = "Can't get institution : " + itemData.getInstitution()
+                    + " Bib - Create Request Failed. Mms Id : " + itemData.getMmsId();
+            logger.error(message);
+            ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
+                    message);
+        }
         String networkNumber = getNetworkNumber(jsonINSBibObject.getJSONArray("network_number"));
         JSONObject jsonBibObject = null;
         if (networkNumber != null) {
@@ -84,6 +98,14 @@ public class RequestHandler {
         try {
             logger.info("Create Digitization Item Request. Barcode: " + requestData.getBarcode());
             JSONObject jsonRequestObject = SCFUtil.getINSRequest(requestData);
+            if (jsonRequestObject == null) {
+                String message = "Can't get institution : " + requestData.getInstitution()
+                        + " Requests. Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode();
+                logger.error(message);
+                ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                        requestData.getInstitution(), message);
+                return;
+            }
             String userId = jsonRequestObject.getString("user_primary_id");
             JSONObject jsonINSUserObject = SCFUtil.getINSUser(requestData, userId, "all_unique",
                     requestData.getInstitution());
@@ -158,6 +180,14 @@ public class RequestHandler {
     public static void createDigitizationUserRequest(ItemData requestData) {
         logger.info("Create Digitization User Request. User Id : " + requestData.getUserId());
         JSONObject jsonRequestObject = SCFUtil.getINSUserRequest(requestData);
+        if (jsonRequestObject == null) {
+            String message = "Can't get institution User Requests - Failed to create Digitization User Request. User Id : "
+                    + requestData.getUserId();
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
+            logger.error(message);
+            return;
+        }
         String userId = jsonRequestObject.getString("user_primary_id");
         JSONObject jsonINSUserObject = SCFUtil.getINSUser(requestData, userId, "all_unique",
                 requestData.getInstitution());

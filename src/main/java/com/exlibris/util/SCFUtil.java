@@ -222,6 +222,13 @@ public class SCFUtil {
     public static JSONObject createSCFItem(ItemData itemData, String mmsId, String holdingId) {
         logger.debug("create SCF Item. Barcode : " + itemData.getBarcode());
         JSONObject instItem = getINSItem(itemData);
+        if (instItem == null) {
+            logger.warn("Can't create SCF item - Can't get institution : " + itemData.getInstitution()
+                    + " item. Barcode : " + itemData.getBarcode());
+            ReportUtil.getInstance().appendReport("ItemsHandler", itemData.getBarcode(), itemData.getInstitution(),
+                    "Can't create SCF item. Barcode : " + itemData.getBarcode());
+            return null;
+        }
         instItem.getJSONObject("item_data").put("barcode", itemData.getBarcode() + "X");
         JSONObject provenance = new JSONObject();
         provenance.put("value", itemData.getInstitution());
@@ -249,7 +256,7 @@ public class SCFUtil {
         return new JSONObject(itemResponse.getBody());
     }
 
-    public static boolean deleteSCFItem(JSONObject jsonItemObject) {
+    public static boolean deleteSCFItem(JSONObject jsonItemObject, ItemData itemData) {
         logger.debug("delete SCF Item. Barcode: " + jsonItemObject.getJSONObject("item_data").getString("barcode"));
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
@@ -261,6 +268,8 @@ public class SCFUtil {
                 remoteStorageApikey);
         if (itemResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
             logger.warn("Can't delete SCF item : " + itemPid);
+            ReportUtil.getInstance().appendReport("ItemsHandler", itemData.getBarcode(), itemData.getInstitution(),
+                    "Can't delete SCF item : " + itemPid);
             return false;
         }
         return true;
@@ -269,6 +278,14 @@ public class SCFUtil {
     public static void updateSCFItem(ItemData itemData, JSONObject scfItem) {
         logger.debug("update SCF Item. Barcode : " + itemData.getBarcode());
         JSONObject instItem = getINSItem(itemData);
+        if (instItem == null) {
+            String message = "Can't update SCF Item - Can't get institution : " + itemData.getInstitution()
+                    + " item. Barcode : " + itemData.getBarcode();
+            logger.warn(message);
+            ReportUtil.getInstance().appendReport("ItemsHandler", itemData.getBarcode(), itemData.getInstitution(),
+                    message);
+            return;
+        }
         JSONObject scfItemData = scfItem.getJSONObject("item_data");
         instItem.getJSONObject("item_data").put("pid", scfItemData.getString("pid"));
         instItem.getJSONObject("item_data").put("barcode", itemData.getBarcode() + "X");
@@ -544,7 +561,8 @@ public class SCFUtil {
         HttpResponse requestsResponce = RequestApi.getRequest(itemData.getMmsId(), itemData.getRequestId(), baseUrl,
                 institutionApiKey);
         if (requestsResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
-            logger.warn("Can't get SCF Item Requests. Barcode : " + itemData.getBarcode());
+            logger.warn("Can't get institution : " + itemData.getInstitution() + " Requests. Barcode : "
+                    + itemData.getBarcode());
             return null;
         }
         JSONObject jsonRequestsObject = new JSONObject(requestsResponce.getBody());
@@ -794,7 +812,7 @@ public class SCFUtil {
         HttpResponse requestsResponce = UserApi.getUserRequest(requestData.getUserId(), requestData.getRequestId(),
                 baseUrl, institutionApiKey);
         if (requestsResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
-            logger.warn("Can't get SCF User Requests. User Id : " + requestData.getUserId());
+            logger.warn("Can't get institution User Requests. User Id : " + requestData.getUserId());
             return null;
         }
         JSONObject jsonRequestsObject = new JSONObject(requestsResponce.getBody());
