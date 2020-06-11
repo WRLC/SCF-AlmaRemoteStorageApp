@@ -1,5 +1,7 @@
 package com.exlibris.webhook;
 
+import javax.net.ssl.HttpsURLConnection;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -9,6 +11,7 @@ import com.exlibris.items.ItemData;
 import com.exlibris.items.ItemsMain;
 import com.exlibris.logger.ReportUtil;
 import com.exlibris.request.RequestsMain;
+import com.exlibris.restapis.HttpResponse;
 import com.exlibris.util.SCFUtil;
 
 public class ManageWebHookMessages {
@@ -163,6 +166,12 @@ public class ManageWebHookMessages {
         String institution = null;
         try {
             jsonScfItemObject = SCFUtil.getSCFItem(itemData);
+            if (jsonScfItemObject == null) {
+                String message = "Can't get SCF item . Barcode: " + barcode;
+                ReportUtil.getInstance().appendReport("RequestCanceled", barcode, institution, message);
+                logger.error(message);
+                return;
+            }
             institution = jsonScfItemObject.getJSONObject("item_data").getJSONObject("provenance").getString("value");
         } catch (Exception e) {
             logger.info("Can't get Request institution, Request Not Part Of SCF .Barcode: " + barcode);
@@ -178,12 +187,16 @@ public class ManageWebHookMessages {
         logger.info("Cancel Request. Source Institution Barcode: " + itemData.getBarcode());
         JSONObject jsonInsItemObject = SCFUtil.getINSItem(itemData);
         if (jsonInsItemObject == null) {
-            logger.info("Can't get institution item. Barcode: " + barcode);
+            String message = "Can't get institution item. Barcode: " + barcode;
+            ReportUtil.getInstance().appendReport("RequestCanceled", barcode, institution, message);
+            logger.error(message);
             return;
         }
         JSONObject jsonRequestsObject = SCFUtil.getItemRequests(jsonInsItemObject, itemData);
         if (jsonRequestsObject == null) {
-            logger.info("Can't get institution requests. Barcode: " + barcode);
+            String message = "Can't get institution requests. Barcode: " + barcode;
+            ReportUtil.getInstance().appendReport("RequestCanceled", barcode, institution, message);
+            logger.error(message);
             return;
         }
         String requestId = null;
@@ -191,8 +204,14 @@ public class ManageWebHookMessages {
             JSONObject request = jsonRequestsObject.getJSONArray("user_request").getJSONObject(i);
             requestId = request.getString("request_id");
             logger.info("Request id is :" + requestId);
-            SCFUtil.cancelItemRequest(jsonInsItemObject, itemData, requestId,
+            HttpResponse requestResponce = SCFUtil.cancelItemRequest(jsonInsItemObject, itemData, requestId,
                     "Remote storage cannot fulfill the request");
+            if (requestResponce.getResponseCode() != HttpsURLConnection.HTTP_NO_CONTENT) {
+                String message = "Can't cancel SCF Item Requests. Barcode : " + itemData.getBarcode();
+                logger.error(message);
+                ReportUtil.getInstance().appendReport("RequestCanceled", itemData.getBarcode(),
+                        itemData.getInstitution(), message);
+            }
         }
 
         if (requestId == null) {
