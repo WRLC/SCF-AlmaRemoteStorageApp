@@ -124,6 +124,12 @@ public class ManageWebHookMessages {
         String institution = null;
         try {
             JSONObject jsonScfItemObject = SCFUtil.getSCFItem(itemData);
+            if (jsonScfItemObject == null) {
+                String message = "Can't get SCF item. Barcode : " + itemData.getBarcode();
+                logger.error(message);
+                ReportUtil.getInstance().appendReport("LoanReturnedHandler", itemData.getBarcode(),
+                        itemData.getInstitution(), message);
+            }
             institution = jsonScfItemObject.getJSONObject("item_data").getJSONObject("provenance").getString("value");
         } catch (Exception e) {
             logger.info("Can't get Request institution .Barcode: " + barcode);
@@ -139,9 +145,15 @@ public class ManageWebHookMessages {
         logger.info("Request source institution is :" + institution + ". userId: " + userId);
         logger.info("Scan In Request. Source Institution Barcode: " + itemData.getBarcode());
         JSONObject jsonItemObject = SCFUtil.getINSItem(itemData);
-        if (jsonItemObject != null) {
-            SCFUtil.scanINSRequest(jsonItemObject, itemData);
+        if (jsonItemObject == null) {
+            String message = "Can't get institution : " + itemData.getInstitution() + " item. Barcode : "
+                    + itemData.getBarcode();
+            logger.error(message);
+            ReportUtil.getInstance().appendReport("LoanReturnedHandler", itemData.getBarcode(),
+                    itemData.getInstitution(), message);
+            return;
         }
+        SCFUtil.scanINSRequest(jsonItemObject, itemData);
 
     }
 

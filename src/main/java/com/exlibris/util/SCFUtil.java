@@ -441,8 +441,11 @@ public class SCFUtil {
                 "true", institutionApiKey);
 
         if (itemResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
-            logger.warn("Can't scan in institution : " + requestData.getInstitution() + " item. Barcode : "
-                    + requestData.getBarcode());
+            String message = "Can't scan in institution : " + requestData.getInstitution() + " item. Barcode : "
+                    + requestData.getBarcode();
+            logger.error(message);
+            ReportUtil.getInstance().appendReport("LoanReturnedHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
         } else {
             logger.debug("Success scan in institution : " + requestData.getInstitution() + " item. Barcode : "
                     + requestData.getBarcode());
