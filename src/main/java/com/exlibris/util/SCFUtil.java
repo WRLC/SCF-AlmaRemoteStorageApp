@@ -618,8 +618,20 @@ public class SCFUtil {
         if (jsonRequestObject.has("full_chapter")) {
             jsonRequest.put("full_chapter", jsonRequestObject.get("full_chapter"));
         }
+        if (jsonRequestObject.has("chapter_or_article_title")) {
+            jsonRequest.put("chapter_or_article_title", jsonRequestObject.get("chapter_or_article_title"));
+        }
+        if (jsonRequestObject.has("chapter_or_article_author")) {
+            jsonRequest.put("chapter_or_article_author", jsonRequestObject.get("chapter_or_article_author"));
+        }
         if (jsonRequestObject.has("manual_description")) {
             jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
+        }
+        if (jsonRequestObject.has("material_type")) {
+            jsonRequest.put("material_type", jsonRequestObject.get("material_type"));
+        }
+        if (jsonRequestObject.has("last_interest_date")) {
+            jsonRequest.put("last_interest_date", jsonRequestObject.get("last_interest_date"));
         }
         HttpResponse requestResponse = RequestApi.createRequest(mmsId, holdingId, itemPid, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), primaryId);
@@ -735,8 +747,20 @@ public class SCFUtil {
         if (jsonRequestObject.has("full_chapter")) {
             jsonRequest.put("full_chapter", jsonRequestObject.get("full_chapter"));
         }
+        if (jsonRequestObject.has("chapter_or_article_title")) {
+            jsonRequest.put("chapter_or_article_title", jsonRequestObject.get("chapter_or_article_title"));
+        }
+        if (jsonRequestObject.has("chapter_or_article_author")) {
+            jsonRequest.put("chapter_or_article_author", jsonRequestObject.get("chapter_or_article_author"));
+        }
         if (jsonRequestObject.has("manual_description")) {
             jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
+        }
+        if (jsonRequestObject.has("material_type")) {
+            jsonRequest.put("material_type", jsonRequestObject.get("material_type"));
+        }
+        if (jsonRequestObject.has("last_interest_date")) {
+            jsonRequest.put("last_interest_date", jsonRequestObject.get("last_interest_date"));
         }
         HttpResponse requestResponse = RequestApi.createBibRequest(mmsId, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), primaryId);
