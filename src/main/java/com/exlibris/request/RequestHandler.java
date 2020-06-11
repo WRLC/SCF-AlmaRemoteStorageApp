@@ -130,13 +130,15 @@ public class RequestHandler {
                 return;
             }
             JSONObject jsonItemObject = SCFUtil.getSCFItem(requestData);
+            JSONObject jsonDigitizationRequestObject = null;
             if (jsonItemObject != null) {
-                JSONObject jsonDigitizationRequestObject = SCFUtil.createSCFDigitizationRequest(jsonUserObject,
-                        jsonRequestObject, jsonItemObject, requestData);
+                jsonDigitizationRequestObject = SCFUtil.createSCFDigitizationRequest(jsonUserObject, jsonRequestObject,
+                        jsonItemObject, requestData);
                 if (jsonDigitizationRequestObject != null) {
                     SCFUtil.cancelTitleRequest(requestData);
                 }
-            } else {
+            }
+            if (jsonDigitizationRequestObject == null || jsonItemObject == null) {
                 String message = "Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode();
                 logger.error(message);
                 ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
