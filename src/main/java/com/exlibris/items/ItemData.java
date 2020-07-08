@@ -212,11 +212,14 @@ public class ItemData {
 
             if (type.equals("PHYSICAL_TO_DIGITIZATION")) {
                 itemData.setInstitution(institution);
+            }
+            if (mmsId == null || "PHYSICAL_TO_DIGITIZATION".equals(type)) {
                 try {
                     String userId = ((Element) element.getElementsByTagName("xb:patronInfo").item(0))
                             .getElementsByTagName("xb:patronIdentifier").item(0).getTextContent();
                     itemData.setUserId(userId);
                 } catch (Exception e) {
+                    logger.debug("can't get patronIdentifier, " + e.getMessage());
                 }
             }
             requestDataList.add(itemData);

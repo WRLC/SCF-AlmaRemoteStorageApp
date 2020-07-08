@@ -322,13 +322,13 @@ public class SCFUtil {
     }
 
     public static JSONObject getINSBib(ItemData itemData) {
-        logger.debug("get institution : " + itemData.getInstitution() + "Bib. Mms Id : " + itemData.getMmsId());
+        logger.debug("get institution : " + itemData.getSourceInstitution() + "Bib. Mms Id : " + itemData.getMmsId());
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String baseUrl = props.get("gateway").toString();
         String institutionApiKey = null;
         for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
             JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
-            if (inst.get("code").toString().equals(itemData.getInstitution())) {
+            if (inst.get("code").toString().equals(itemData.getSourceInstitution())) {
                 institutionApiKey = inst.getString("apikey");
                 break;
             }
@@ -367,17 +367,43 @@ public class SCFUtil {
         }
     }
 
-    public static void createSCFBibRequest(JSONObject jsonBibObject, ItemData itemData) {
-        logger.debug("create SCF Request. Bib: " + jsonBibObject.getString("mms_id"));
+    public static void createSCFBibRequest(JSONObject jsonBibObject, JSONObject jsonRequestObject, ItemData itemData) {
+        String mmsId = null;
+        try {
+            mmsId = jsonBibObject.getJSONArray("bib").getJSONObject(0).getString("mms_id");
+        } catch (Exception e) {
+            mmsId = jsonBibObject.getString("mms_id");
+        }
+        logger.debug("create SCF Request. Bib: " + mmsId);
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
         String baseUrl = props.get("gateway").toString();
-        String mmsId = jsonBibObject.getString("mms_id");
+
         String userId = getUserIdByIns(itemData);
 
         JSONObject jsonRequest = getRequestObj();
         jsonRequest.put("user_primary_id", userId);
         jsonRequest.put("description", itemData.getDescription());
+        if (jsonRequestObject != null) {
+            if (itemData.getDescription() == null && jsonRequestObject.has("description")) {
+                jsonRequest.put("description", jsonRequestObject.get("description"));
+            }
+            if (jsonRequestObject.has("manual_description")) {
+                jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
+            }
+            if (jsonRequestObject.has("volume")) {
+                jsonRequest.put("volume", jsonRequestObject.get("volume"));
+            }
+            if (jsonRequestObject.has("issue")) {
+                jsonRequest.put("issue", jsonRequestObject.get("issue"));
+            }
+            if (jsonRequestObject.has("part")) {
+                jsonRequest.put("part", jsonRequestObject.get("part"));
+            }
+            if (jsonRequestObject.has("date_of_publication")) {
+                jsonRequest.put("date_of_publication", jsonRequestObject.get("date_of_publication"));
+            }
+        }
         HttpResponse requestResponse = RequestApi.createBibRequest(mmsId, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), userId);
         if (requestResponse.getResponseCode() != HttpsURLConnection.HTTP_OK) {
@@ -547,15 +573,15 @@ public class SCFUtil {
     }
 
     public static JSONObject getINSRequest(ItemData itemData) {
-        logger.debug(
-                "get institution : " + itemData.getInstitution() + " Request. Request id : " + itemData.getRequestId());
+        logger.debug("get institution : " + itemData.getSourceInstitution() + " Request. Request id : "
+                + itemData.getRequestId());
 
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String baseUrl = props.get("gateway").toString();
         String institutionApiKey = null;
         for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
             JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
-            if (inst.get("code").toString().equals(itemData.getInstitution())) {
+            if (inst.get("code").toString().equals(itemData.getSourceInstitution())) {
                 institutionApiKey = inst.getString("apikey");
                 break;
             }
@@ -654,6 +680,18 @@ public class SCFUtil {
         if (jsonRequestObject.has("last_interest_date")) {
             jsonRequest.put("last_interest_date", jsonRequestObject.get("last_interest_date"));
         }
+        if (jsonRequestObject.has("volume")) {
+            jsonRequest.put("volume", jsonRequestObject.get("volume"));
+        }
+        if (jsonRequestObject.has("issue")) {
+            jsonRequest.put("issue", jsonRequestObject.get("issue"));
+        }
+        if (jsonRequestObject.has("part")) {
+            jsonRequest.put("part", jsonRequestObject.get("part"));
+        }
+        if (jsonRequestObject.has("date_of_publication")) {
+            jsonRequest.put("date_of_publication", jsonRequestObject.get("date_of_publication"));
+        }
         HttpResponse requestResponse = RequestApi.createRequest(mmsId, holdingId, itemPid, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), primaryId);
         if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
@@ -741,14 +779,19 @@ public class SCFUtil {
     }
 
     public static JSONObject createSCFDigitizationUserRequest(JSONObject jsonUserObject, JSONObject jsonRequestObject,
-            ItemData requestData) {
+            JSONObject jsonBibObject, ItemData requestData) {
         logger.debug("create SCF Digitization Request. User Id: " + jsonUserObject.getString("primary_id"));
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
         String baseUrl = props.get("gateway").toString();
 
         String primaryId = jsonUserObject.getString("primary_id");
-        String mmsId = jsonRequestObject.getString("mms_id");
+        String mmsId = null;
+        try {
+            mmsId = jsonBibObject.getJSONArray("bib").getJSONObject(0).getString("mms_id");
+        } catch (Exception e) {
+            mmsId = jsonBibObject.getString("mms_id");
+        }
 
         JSONObject jsonRequest = getDigitizationRequestObj();
         jsonRequest.put("user_primary_id", primaryId);
@@ -783,6 +826,18 @@ public class SCFUtil {
         if (jsonRequestObject.has("last_interest_date")) {
             jsonRequest.put("last_interest_date", jsonRequestObject.get("last_interest_date"));
         }
+        if (jsonRequestObject.has("volume")) {
+            jsonRequest.put("volume", jsonRequestObject.get("volume"));
+        }
+        if (jsonRequestObject.has("issue")) {
+            jsonRequest.put("issue", jsonRequestObject.get("issue"));
+        }
+        if (jsonRequestObject.has("part")) {
+            jsonRequest.put("part", jsonRequestObject.get("part"));
+        }
+        if (jsonRequestObject.has("date_of_publication")) {
+            jsonRequest.put("date_of_publication", jsonRequestObject.get("date_of_publication"));
+        }
         HttpResponse requestResponse = RequestApi.createBibRequest(mmsId, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), primaryId);
         if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
@@ -799,7 +854,7 @@ public class SCFUtil {
     }
 
     public static JSONObject getINSUserRequest(ItemData requestData) {
-        logger.debug("get institution : " + requestData.getInstitution() + " User Request. Request id : "
+        logger.debug("get institution : " + requestData.getSourceInstitution() + " User Request. Request id : "
                 + requestData.getRequestId());
 
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
@@ -807,7 +862,7 @@ public class SCFUtil {
         String institutionApiKey = null;
         for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
             JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
-            if (inst.get("code").toString().equals(requestData.getInstitution())) {
+            if (inst.get("code").toString().equals(requestData.getSourceInstitution())) {
                 institutionApiKey = inst.getString("apikey");
                 break;
             }

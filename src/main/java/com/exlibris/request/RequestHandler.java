@@ -55,6 +55,27 @@ public class RequestHandler {
     }
 
     public static void createBibRequest(ItemData itemData) {
+        logger.info("Create Bib Request.get Institution : " + itemData.getSourceInstitution() + " Request : "
+                + itemData.getRequestId());
+        JSONObject jsonRequestObject = null;
+        if (itemData.getMmsId() != null) {
+            logger.info("Create Bib Request.get Institution  : " + itemData.getSourceInstitution() + " Request : "
+                    + itemData.getRequestId() + "By Mms Id : " + itemData.getMmsId());
+            jsonRequestObject = SCFUtil.getINSRequest(itemData);
+        } else {
+            logger.info("Create Bib Request.get Institution : " + itemData.getSourceInstitution() + " Request : "
+                    + itemData.getRequestId() + " By User Id : " + itemData.getUserId());
+            jsonRequestObject = SCFUtil.getINSUserRequest(itemData);
+            if (jsonRequestObject == null) {
+                String message = "Can't get institution : " + itemData.getSourceInstitution()
+                        + " Requests. Failed to create Bib Request. Barcode: " + itemData.getBarcode();
+                logger.error(message);
+                ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(),
+                        itemData.getSourceInstitution(), message);
+                return;
+            }
+            itemData.setMmsId(jsonRequestObject.getString("mms_id"));
+        }
         logger.info("Create Bib Request. Mms Id : " + itemData.getMmsId());
         logger.debug("get Institution Bib to get NZ MMS ID");
         JSONObject jsonINSBibObject = SCFUtil.getINSBib(itemData);
@@ -81,7 +102,7 @@ public class RequestHandler {
             ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
                     message);
         }
-        SCFUtil.createSCFBibRequest(jsonBibObject, itemData);
+        SCFUtil.createSCFBibRequest(jsonBibObject, jsonRequestObject, itemData);
     }
 
     private static String getNetworkNumber(JSONArray networkNumbers) {
@@ -232,10 +253,21 @@ public class RequestHandler {
             logger.error(message);
             return;
         }
+        requestData.setMmsId(jsonRequestObject.getString("mms_id"));
+
+        JSONObject jsonBibObject = getSCFBibByInstMmsId(requestData);
+        if (jsonBibObject == null) {
+            String message = "Failed to create Digitization User Request. User Id : " + requestData.getUserId()
+                    + " Can't get institution : " + requestData.getInstitution()
+                    + " Bib - Create Request Failed. Mms Id : " + requestData.getMmsId();
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
+            logger.error(message);
+            return;
+        }
         JSONObject jsonDigitizationRequestObject = SCFUtil.createSCFDigitizationUserRequest(jsonUserObject,
-                jsonRequestObject, requestData);
+                jsonRequestObject, jsonBibObject, requestData);
         if (jsonDigitizationRequestObject != null) {
-            requestData.setMmsId(jsonRequestObject.getString("mms_id"));
             SCFUtil.cancelTitleRequest(requestData);
         } else {
             String message = "Failed to create Digitization User Request." + requestData.getUserId();
@@ -245,6 +277,28 @@ public class RequestHandler {
             return;
         }
 
+    }
+
+    public static JSONObject getSCFBibByInstMmsId(ItemData itemData) {
+        logger.debug("get Institution Bib to get NZ MMS ID");
+        JSONObject jsonINSBibObject = SCFUtil.getINSBib(itemData);
+        if (jsonINSBibObject == null) {
+            return null;
+        }
+        String networkNumber = getNetworkNumber(jsonINSBibObject.getJSONArray("network_number"));
+        JSONObject jsonBibObject = null;
+        if (networkNumber != null) {
+            itemData.setNetworkNumber(networkNumber);
+            logger.debug("get SCF Bibbased on NZ MMS ID");
+            jsonBibObject = SCFUtil.getSCFBibByNZ(itemData);
+        } else {
+            logger.debug("get SCF Bibbased on Local Institution MMS ID");
+            jsonBibObject = SCFUtil.getSCFBibByINST(itemData);
+        }
+        if (jsonBibObject == null) {
+            return null;
+        }
+        return jsonBibObject;
     }
 
 }
