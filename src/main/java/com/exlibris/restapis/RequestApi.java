@@ -96,7 +96,8 @@ public class RequestApi {
         logger.info("Mms Id: " + mmsId + " - calling DLETE");
 
         String url = baseUrl + "/almaws/v1/bibs/" + mmsId + "/requests/" + requestId + "?reason="
-                + "ResourceFoundInInstitution" + "&note=" + encodeValue("note") + "&apikey=" + apiKey;
+                + "ResourceFoundInInstitution" + "&notify_user=false" + "&note=" + encodeValue("note") + "&apikey="
+                + apiKey;
 
         HttpResponse requestResponse = AlmaRestUtil.sendHttpReq(url, "DELETE", null);
         return requestResponse;

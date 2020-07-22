@@ -237,6 +237,8 @@ public class SCFUtil {
         instItem.getJSONObject("item_data").remove("library");
         instItem.getJSONObject("item_data").remove("location");
         instItem.getJSONObject("item_data").remove("policy");
+        instItem.getJSONObject("item_data").remove("internal_note_1");
+        instItem.getJSONObject("item_data").remove("call_number");
         instItem.getJSONObject("holding_data").remove("temp_library");
         instItem.getJSONObject("holding_data").remove("in_temp_location");
         instItem.getJSONObject("holding_data").remove("temp_location");
@@ -299,6 +301,7 @@ public class SCFUtil {
                 scfItemData.get("alternative_call_number_type"));
         instItem.getJSONObject("item_data").put("storage_location_id", scfItemData.get("storage_location_id"));
         instItem.getJSONObject("item_data").put("internal_note_1", scfItemData.get("internal_note_1"));
+        instItem.getJSONObject("item_data").put("statistics_note_2", scfItemData.get("statistics_note_2"));
         instItem.put("holding_data", scfItem.get("holding_data"));
         instItem.put("bib_data", scfItem.get("bib_data"));
 
@@ -384,12 +387,19 @@ public class SCFUtil {
         JSONObject jsonRequest = getRequestObj();
         jsonRequest.put("user_primary_id", userId);
         jsonRequest.put("description", itemData.getDescription());
+        String comment = "";
+        if (jsonRequestObject.has("comment") && !jsonRequestObject.get("comment").equals(null)) {
+            comment += jsonRequestObject.getString("comment") + " ";
+        }
+        comment += "The inventory for this request should come from " + itemData.getInstitution();
         if (jsonRequestObject != null) {
             if (itemData.getDescription() == null && jsonRequestObject.has("description")) {
                 jsonRequest.put("description", jsonRequestObject.get("description"));
             }
-            if (jsonRequestObject.has("manual_description")) {
+            if (jsonRequestObject.has("manual_description") && !jsonRequestObject.get("manual_description").equals(null)
+                    && !jsonRequestObject.get("manual_description").equals("")) {
                 jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
+                comment += " " + jsonRequestObject.get("manual_description");
             }
             if (jsonRequestObject.has("volume")) {
                 jsonRequest.put("volume", jsonRequestObject.get("volume"));
@@ -403,7 +413,9 @@ public class SCFUtil {
             if (jsonRequestObject.has("date_of_publication")) {
                 jsonRequest.put("date_of_publication", jsonRequestObject.get("date_of_publication"));
             }
+
         }
+        jsonRequest.put("comment", comment);
         HttpResponse requestResponse = RequestApi.createBibRequest(mmsId, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), userId);
         if (requestResponse.getResponseCode() != HttpsURLConnection.HTTP_OK) {
@@ -657,7 +669,6 @@ public class SCFUtil {
             comment = jsonRequestObject.getString("comment") + " ";
         }
         comment += "The inventory for this request should come from " + requestData.getInstitution();
-        jsonRequest.put("comment", comment);
         jsonRequest.put("partial_digitization", jsonRequestObject.get("partial_digitization"));
         if (jsonRequestObject.has("required_pages_range")) {
             jsonRequest.put("required_pages_range", jsonRequestObject.get("required_pages_range"));
@@ -671,8 +682,10 @@ public class SCFUtil {
         if (jsonRequestObject.has("chapter_or_article_author")) {
             jsonRequest.put("chapter_or_article_author", jsonRequestObject.get("chapter_or_article_author"));
         }
-        if (jsonRequestObject.has("manual_description")) {
+        if (jsonRequestObject.has("manual_description") && !jsonRequestObject.get("manual_description").equals(null)
+                && !jsonRequestObject.get("manual_description").equals("")) {
             jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
+            comment += " " + jsonRequestObject.get("manual_description");
         }
         if (jsonRequestObject.has("material_type")) {
             jsonRequest.put("material_type", jsonRequestObject.get("material_type"));
@@ -692,6 +705,7 @@ public class SCFUtil {
         if (jsonRequestObject.has("date_of_publication")) {
             jsonRequest.put("date_of_publication", jsonRequestObject.get("date_of_publication"));
         }
+        jsonRequest.put("comment", comment);
         HttpResponse requestResponse = RequestApi.createRequest(mmsId, holdingId, itemPid, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), primaryId);
         if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
@@ -803,7 +817,6 @@ public class SCFUtil {
             comment = jsonRequestObject.getString("comment") + " ";
         }
         comment += "The inventory for this request should come from " + requestData.getInstitution();
-        jsonRequest.put("comment", comment);
         jsonRequest.put("partial_digitization", jsonRequestObject.get("partial_digitization"));
         if (jsonRequestObject.has("required_pages_range")) {
             jsonRequest.put("required_pages_range", jsonRequestObject.get("required_pages_range"));
@@ -817,8 +830,10 @@ public class SCFUtil {
         if (jsonRequestObject.has("chapter_or_article_author")) {
             jsonRequest.put("chapter_or_article_author", jsonRequestObject.get("chapter_or_article_author"));
         }
-        if (jsonRequestObject.has("manual_description")) {
+        if (jsonRequestObject.has("manual_description") && !jsonRequestObject.get("manual_description").equals(null)
+                && !jsonRequestObject.get("manual_description").equals("")) {
             jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
+            comment += " " + jsonRequestObject.get("manual_description");
         }
         if (jsonRequestObject.has("material_type")) {
             jsonRequest.put("material_type", jsonRequestObject.get("material_type"));
@@ -838,6 +853,7 @@ public class SCFUtil {
         if (jsonRequestObject.has("date_of_publication")) {
             jsonRequest.put("date_of_publication", jsonRequestObject.get("date_of_publication"));
         }
+        jsonRequest.put("comment", comment);
         HttpResponse requestResponse = RequestApi.createBibRequest(mmsId, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), primaryId);
         if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {

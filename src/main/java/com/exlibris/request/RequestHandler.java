@@ -101,6 +101,7 @@ public class RequestHandler {
             logger.error(message);
             ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
                     message);
+            return;
         }
         SCFUtil.createSCFBibRequest(jsonBibObject, jsonRequestObject, itemData);
     }
