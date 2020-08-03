@@ -139,7 +139,7 @@ public class RequestHandler {
                         requestData.getInstitution(), message);
                 return;
             }
-            String userLinkingId = userId;
+            String userLinkingId;
             String userSourceInstitution = requestData.getInstitution();
             if (jsonINSUserObject.has("source_link_id") && jsonINSUserObject.has("source_institution_code")) {
                 userLinkingId = jsonINSUserObject.getString("source_link_id");
@@ -149,7 +149,7 @@ public class RequestHandler {
                     JSONObject jsonSourceUserObject = SCFUtil.getINSUser(requestData, userLinkingId, "linking_id",
                             userSourceInstitution);
                     if (jsonSourceUserObject != null) {
-                        userLinkingId = jsonSourceUserObject.getString("primary_id");
+                        userId = jsonSourceUserObject.getString("primary_id");
                     } else {
                         String message = "Failed to create Digitization Item Request. Barcode: "
                                 + requestData.getBarcode();
@@ -164,7 +164,7 @@ public class RequestHandler {
                 jsonUserObject = SCFUtil.getSCFUser(requestData, userLinkingId, requestData.getInstitution());
             }
             if (jsonUserObject == null) {
-                jsonUserObject = SCFUtil.createSCFUser(requestData, userLinkingId, userSourceInstitution);
+                jsonUserObject = SCFUtil.createSCFUser(requestData, userId, userSourceInstitution);
             }
             if (jsonUserObject == null) {
                 String message = "Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode();
@@ -221,7 +221,7 @@ public class RequestHandler {
             logger.error(message);
             return;
         }
-        String userLinkingId = userId;
+        String userLinkingId;
         String userSourceInstitution = requestData.getInstitution();
         if (jsonINSUserObject.has("source_link_id") && jsonINSUserObject.has("source_institution_code")) {
             userLinkingId = jsonINSUserObject.getString("source_link_id");
@@ -231,7 +231,7 @@ public class RequestHandler {
                 JSONObject jsonSourceUserObject = SCFUtil.getINSUser(requestData, userLinkingId, "linking_id",
                         userSourceInstitution);
                 if (jsonSourceUserObject != null) {
-                    userLinkingId = jsonSourceUserObject.getString("primary_id");
+                    userId = jsonSourceUserObject.getString("primary_id");
                 } else {
                     String message = "Failed to create Digitization User Request. User Id : " + requestData.getUserId();
                     ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
@@ -245,7 +245,7 @@ public class RequestHandler {
             jsonUserObject = SCFUtil.getSCFUser(requestData, userLinkingId, requestData.getInstitution());
         }
         if (jsonUserObject == null) {
-            jsonUserObject = SCFUtil.createSCFUser(requestData, userLinkingId, userSourceInstitution);
+            jsonUserObject = SCFUtil.createSCFUser(requestData, userId, userSourceInstitution);
         }
         if (jsonUserObject == null) {
             String message = "Failed to create Digitization User Request. User Id : " + requestData.getUserId();
