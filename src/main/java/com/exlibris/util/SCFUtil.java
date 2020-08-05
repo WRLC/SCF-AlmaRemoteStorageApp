@@ -709,14 +709,20 @@ public class SCFUtil {
         HttpResponse requestResponse = RequestApi.createRequest(mmsId, holdingId, itemPid, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), primaryId);
         if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
-            logger.warn("Can't create SCF request. Item Pid : " + itemPid);
+            String message = "Can't create SCF request. Item Pid : " + itemPid + "." + requestResponse.getBody();
+            logger.error(message);
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
             return null;
         }
         JSONObject jsonRequestsObject = null;
         try {
             jsonRequestsObject = new JSONObject(requestResponse.getBody());
         } catch (Exception e) {
-            logger.warn("Can't create SCF request. Item Pid : " + itemPid);
+            String message = "Can't create SCF request. Item Pid : " + itemPid + "." + requestResponse.getBody();
+            logger.error(message);
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
         }
         return jsonRequestsObject;
     }
@@ -857,14 +863,23 @@ public class SCFUtil {
         HttpResponse requestResponse = RequestApi.createBibRequest(mmsId, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), primaryId);
         if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
-            logger.warn("Can't create SCF request. Mms Id : " + mmsId + " User Id : " + primaryId);
+            String message = "Can't create SCF request. Mms Id : " + mmsId + " User Id : " + primaryId + "."
+                    + requestResponse.getBody();
+            logger.error(message);
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
             return null;
         }
         JSONObject jsonRequestsObject = null;
         try {
             jsonRequestsObject = new JSONObject(requestResponse.getBody());
         } catch (Exception e) {
-            logger.warn("Can't create SCF request. Mms Id : " + mmsId + " User Id : " + primaryId);
+            String message = "Can't create SCF request. Mms Id : " + mmsId + " User Id : " + primaryId + "."
+                    + requestResponse.getBody();
+            logger.error(message);
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
+            return null;
         }
         return jsonRequestsObject;
     }

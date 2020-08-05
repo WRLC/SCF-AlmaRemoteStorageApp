@@ -182,7 +182,7 @@ public class RequestHandler {
                     SCFUtil.cancelTitleRequest(requestData);
                 }
             }
-            if (jsonDigitizationRequestObject == null || jsonItemObject == null) {
+            if (jsonItemObject == null) {
                 String message = "Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode();
                 logger.error(message);
                 ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
@@ -270,14 +270,7 @@ public class RequestHandler {
                 jsonRequestObject, jsonBibObject, requestData);
         if (jsonDigitizationRequestObject != null) {
             SCFUtil.cancelTitleRequest(requestData);
-        } else {
-            String message = "Failed to create Digitization User Request." + requestData.getUserId();
-            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
-                    requestData.getInstitution(), message);
-            logger.error(message);
-            return;
         }
-
     }
 
     public static JSONObject getSCFBibByInstMmsId(ItemData itemData) {
