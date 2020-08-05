@@ -687,9 +687,6 @@ public class SCFUtil {
             jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
             comment += " " + jsonRequestObject.get("manual_description");
         }
-        if (jsonRequestObject.has("material_type")) {
-            jsonRequest.put("material_type", jsonRequestObject.get("material_type"));
-        }
         if (jsonRequestObject.has("last_interest_date")) {
             jsonRequest.put("last_interest_date", jsonRequestObject.get("last_interest_date"));
         }
@@ -840,9 +837,6 @@ public class SCFUtil {
                 && !jsonRequestObject.get("manual_description").equals("")) {
             jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
             comment += " " + jsonRequestObject.get("manual_description");
-        }
-        if (jsonRequestObject.has("material_type")) {
-            jsonRequest.put("material_type", jsonRequestObject.get("material_type"));
         }
         if (jsonRequestObject.has("last_interest_date")) {
             jsonRequest.put("last_interest_date", jsonRequestObject.get("last_interest_date"));
