@@ -90,7 +90,19 @@ public class SCFUtil {
                     "No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : " + itemData.getBarcode());
             return null;
         }
-        JSONObject jsonBibObject = new JSONObject(bibResponse.getBody());
+        JSONObject jsonBibObject = null;
+        try {
+            jsonBibObject = new JSONObject(bibResponse.getBody());
+            if (jsonBibObject.has("total_record_count") && "0".equals(jsonBibObject.getString("total_record_count"))) {
+                logger.debug(
+                        "No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : " + itemData.getBarcode());
+                return null;
+            }
+        } catch (Exception e) {
+            logger.debug(
+                    "No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : " + itemData.getBarcode());
+            return null;
+        }
         return jsonBibObject;
     }
 
@@ -106,7 +118,17 @@ public class SCFUtil {
             logger.debug("No bib found for System Id :" + localNumber + ". Barcode : " + itemData.getBarcode());
             return null;
         }
-        JSONObject jsonBibObject = new JSONObject(bibResponse.getBody());
+        JSONObject jsonBibObject = null;
+        try {
+            jsonBibObject = new JSONObject(bibResponse.getBody());
+            if (jsonBibObject.has("total_record_count") && "0".equals(jsonBibObject.getString("total_record_count"))) {
+                logger.debug("No bib found for System Id :" + localNumber + ". Barcode : " + itemData.getBarcode());
+                return null;
+            }
+        } catch (Exception e) {
+            logger.debug("No bib found for System Id :" + localNumber + ". Barcode : " + itemData.getBarcode());
+            return null;
+        }
         return jsonBibObject;
     }
 
