@@ -55,23 +55,32 @@ public class RequestsMain {
                 String content = new String(Files.readAllBytes(xmlFile.toPath()));
                 List<ItemData> requestList = ItemData.xmlStringToRequestData(content, institution);
                 for (ItemData request : requestList) {
-                    if (request.getBarcode().contains(" ") || request.getBarcode().contains(":")) {
-                        if (request.getUserId() != null
-                                && request.getRequestType().equals("PHYSICAL_TO_DIGITIZATION")) {
-                            RequestHandler.createDigitizationUserRequest(request);
-                        } else {
-                            RequestHandler.createBibRequest(request);
+                    boolean success = false;
+                    try {
+                        if (request.getBarcode().contains(" ") || request.getBarcode().contains(":")) {
+                            if (request.getUserId() != null
+                                    && request.getRequestType().equals("PHYSICAL_TO_DIGITIZATION")) {
+                                success = RequestHandler.createDigitizationUserRequest(request);
+                            } else {
+                                success = RequestHandler.createBibRequest(request);
+                            }
+                            continue;
                         }
-                        continue;
+                        if (request.getBarcode() != null && !request.getBarcode().isEmpty()) {
+                            if (request.getRequestType().equals("PHYSICAL_TO_DIGITIZATION")) {
+                                success = RequestHandler.createDigitizationItemRequest(request);
+                            } else {
+                                success = RequestHandler.createItemRequest(request);
+                            }
+                        } else {
+                            success = RequestHandler.createBibRequest(request);
+                        }
+                    } catch (Exception e) {
+                        ReportUtil.getInstance().appendReport("RequestHandler", "", institution,
+                                "Failed to handle request" + e.getMessage());
                     }
-                    if (request.getBarcode() != null && !request.getBarcode().isEmpty()) {
-                        if (request.getRequestType().equals("PHYSICAL_TO_DIGITIZATION")) {
-                            RequestHandler.createDigitizationItemRequest(request);
-                        } else {
-                            RequestHandler.createItemRequest(request);
-                        }
-                    } else {
-                        RequestHandler.createBibRequest(request);
+                    if (!success) {
+                        RequestHandler.cancelRequest(request);
                     }
 
                 }

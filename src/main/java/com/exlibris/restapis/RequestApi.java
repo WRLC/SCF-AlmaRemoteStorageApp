@@ -91,13 +91,24 @@ public class RequestApi {
     }
 
     public static HttpResponse cancleTitleRequest(String mmsId, String requestId, String reason, String note,
-            String baseUrl, String apiKey) {
+            String notifyUser, String baseUrl, String apiKey) {
         logger.info("Starting to handle cancel request, request id: " + requestId + ".");
         logger.info("Mms Id: " + mmsId + " - calling DLETE");
 
-        String url = baseUrl + "/almaws/v1/bibs/" + mmsId + "/requests/" + requestId + "?reason="
-                + "ResourceFoundInInstitution" + "&notify_user=false" + "&note=" + encodeValue("note") + "&apikey="
-                + apiKey;
+        String url = baseUrl + "/almaws/v1/bibs/" + mmsId + "/requests/" + requestId + "?reason=" + reason
+                + "&notify_user=" + notifyUser + "&note=" + encodeValue(note) + "&apikey=" + apiKey;
+
+        HttpResponse requestResponse = AlmaRestUtil.sendHttpReq(url, "DELETE", null);
+        return requestResponse;
+    }
+
+    public static HttpResponse cancleUserRequest(String userId, String requestId, String reason, String note,
+            String notifyUser, String baseUrl, String apiKey) {
+        logger.info("Starting to handle cancel request, request id: " + requestId + ".");
+        logger.info("User Id: " + userId + " - calling DLETE");
+
+        String url = baseUrl + "/almaws/v1/users/" + userId + "/requests/" + requestId + "?reason=" + reason
+                + "&notify_user=" + notifyUser + "&note=" + encodeValue(note) + "&apikey=" + apiKey;
 
         HttpResponse requestResponse = AlmaRestUtil.sendHttpReq(url, "DELETE", null);
         return requestResponse;

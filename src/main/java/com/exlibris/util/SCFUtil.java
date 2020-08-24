@@ -368,7 +368,7 @@ public class SCFUtil {
         return jsonItemObject;
     }
 
-    public static void createSCFRequest(JSONObject jsonItemObject, ItemData itemData) {
+    public static HttpResponse createSCFRequest(JSONObject jsonItemObject, ItemData itemData) {
         logger.debug("create SCF Request. Barcode: " + jsonItemObject.getJSONObject("item_data").getString("barcode"));
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
@@ -388,11 +388,13 @@ public class SCFUtil {
             logger.error(message);
             ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
                     message);
-            return;
+            return null;
         }
+        return requestResponse;
     }
 
-    public static void createSCFBibRequest(JSONObject jsonBibObject, JSONObject jsonRequestObject, ItemData itemData) {
+    public static HttpResponse createSCFBibRequest(JSONObject jsonBibObject, JSONObject jsonRequestObject,
+            ItemData itemData) {
         String mmsId = null;
         try {
             mmsId = jsonBibObject.getJSONArray("bib").getJSONObject(0).getString("mms_id");
@@ -440,14 +442,7 @@ public class SCFUtil {
         jsonRequest.put("comment", comment);
         HttpResponse requestResponse = RequestApi.createBibRequest(mmsId, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), userId);
-        if (requestResponse.getResponseCode() != HttpsURLConnection.HTTP_OK) {
-            String message = "Can't create SCF request. Bib Id : " + jsonBibObject.getString("mms_id") + ". "
-                    + requestResponse.getBody();
-            logger.error(message);
-            ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
-                    message);
-            return;
-        }
+        return requestResponse;
 
     }
 
@@ -763,7 +758,7 @@ public class SCFUtil {
 
         HttpResponse requestsResponce = RequestApi.cancleTitleRequest(requestData.getMmsId(),
                 requestData.getRequestId(), "RequestSwitched", "Request will be handled by the remote storage.",
-                baseUrl, institutionApiKey);
+                "false", baseUrl, institutionApiKey);
         if (requestsResponce.getResponseCode() == HttpsURLConnection.HTTP_NO_CONTENT) {
             logger.info("successfully canceled Title Requests. Mms Id : " + requestData.getMmsId() + " Institution : "
                     + requestData.getInstitution());
@@ -934,6 +929,43 @@ public class SCFUtil {
             }
         }
         return null;
+    }
+
+    public static void cancelRequest(ItemData requestData) {
+        logger.debug("cancel institution : " + requestData.getSourceInstitution() + " Request. Request id : "
+                + requestData.getRequestId());
+
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String baseUrl = props.get("gateway").toString();
+        String institutionApiKey = null;
+        for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
+            JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
+            if (inst.get("code").toString().equals(requestData.getInstitution())) {
+                institutionApiKey = inst.getString("apikey");
+                break;
+            }
+        }
+        HttpResponse requestsResponce = null;
+        if (requestData.getMmsId() != null) {
+            requestsResponce = RequestApi.cancleTitleRequest(requestData.getMmsId(), requestData.getRequestId(),
+                    "CannotBeFulfilled", "Request could not be fulfilled by the SCF.", "true", baseUrl,
+                    institutionApiKey);
+        } else if (requestData.getUserId() != null) {
+            requestsResponce = RequestApi.cancleUserRequest(requestData.getMmsId(), requestData.getRequestId(),
+                    "CannotBeFulfilled", "Request could not be fulfilled by the SCF.", "true", baseUrl,
+                    institutionApiKey);
+        }
+        if (requestsResponce != null && requestsResponce.getResponseCode() == HttpsURLConnection.HTTP_NO_CONTENT) {
+            logger.info("successfully canceled request. Request id : " + requestData.getRequestId() + " Institution : "
+                    + requestData.getSourceInstitution());
+        } else {
+            String message = "Can't cancel requests. Request. Request id : " + requestData.getRequestId()
+                    + " Institution : " + requestData.getSourceInstitution();
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getSourceInstitution(), message);
+            logger.error(message);
+        }
+
     }
 
 }

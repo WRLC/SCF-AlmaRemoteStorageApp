@@ -15,7 +15,7 @@ public class RequestHandler {
 
     final private static Logger logger = Logger.getLogger(RequestHandler.class);
 
-    public static void createItemRequest(ItemData requestData) {
+    public static boolean createItemRequest(ItemData requestData) {
         logger.info("Create Item Request. Barcode: " + requestData.getBarcode());
         JSONObject jsonItemObject = SCFUtil.getSCFItem(requestData);
         if (jsonItemObject != null) {
@@ -41,20 +41,24 @@ public class RequestHandler {
                     logger.error(message);
                     ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                             requestData.getInstitution(), message);
+                    return false;
                 }
-                return;
             }
-            SCFUtil.createSCFRequest(jsonItemObject, requestData);
+            HttpResponse requestResponse = SCFUtil.createSCFRequest(jsonItemObject, requestData);
+            if (requestResponse == null) {
+                return false;
+            }
         } else {
             String message = "Create Request Failed. Barcode: " + requestData.getBarcode() + "X Does not exist in SCF";
             logger.error(message);
             ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                     requestData.getInstitution(), message);
-            return;
+            return false;
         }
+        return true;
     }
 
-    public static void createBibRequest(ItemData itemData) {
+    public static boolean createBibRequest(ItemData itemData) {
         logger.info("Create Bib Request.get Institution : " + itemData.getSourceInstitution() + " Request : "
                 + itemData.getRequestId());
         JSONObject jsonRequestObject = null;
@@ -72,7 +76,7 @@ public class RequestHandler {
                 logger.error(message);
                 ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(),
                         itemData.getSourceInstitution(), message);
-                return;
+                return false;
             }
             itemData.setMmsId(jsonRequestObject.getString("mms_id"));
         }
@@ -85,6 +89,7 @@ public class RequestHandler {
             logger.error(message);
             ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
                     message);
+            return false;
         }
         String networkNumber = getNetworkNumber(jsonINSBibObject.getJSONArray("network_number"));
         JSONObject jsonBibObject = null;
@@ -101,9 +106,18 @@ public class RequestHandler {
             logger.error(message);
             ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
                     message);
-            return;
+            return false;
         }
-        SCFUtil.createSCFBibRequest(jsonBibObject, jsonRequestObject, itemData);
+        HttpResponse requestResponse = SCFUtil.createSCFBibRequest(jsonBibObject, jsonRequestObject, itemData);
+        if (requestResponse.getResponseCode() != HttpsURLConnection.HTTP_OK) {
+            String message = "Can't create SCF request. Bib Id : " + jsonBibObject.getString("mms_id") + ". "
+                    + requestResponse.getBody();
+            logger.error(message);
+            ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
+                    message);
+            return false;
+        }
+        return true;
     }
 
     private static String getNetworkNumber(JSONArray networkNumbers) {
@@ -116,7 +130,7 @@ public class RequestHandler {
         return null;
     }
 
-    public static void createDigitizationItemRequest(ItemData requestData) {
+    public static boolean createDigitizationItemRequest(ItemData requestData) {
         try {
             logger.info("Create Digitization Item Request. Barcode: " + requestData.getBarcode());
             JSONObject jsonRequestObject = SCFUtil.getINSRequest(requestData);
@@ -126,7 +140,7 @@ public class RequestHandler {
                 logger.error(message);
                 ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                         requestData.getInstitution(), message);
-                return;
+                return false;
             }
             String userId = jsonRequestObject.getString("user_primary_id");
             JSONObject jsonINSUserObject = SCFUtil.getINSUser(requestData, userId, "all_unique",
@@ -137,7 +151,7 @@ public class RequestHandler {
                 logger.error("Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode());
                 ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                         requestData.getInstitution(), message);
-                return;
+                return false;
             }
             String userLinkingId;
             String userSourceInstitution = requestData.getInstitution();
@@ -156,7 +170,7 @@ public class RequestHandler {
                         logger.error(message);
                         ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                                 requestData.getInstitution(), message);
-                        return;
+                        return false;
                     }
                 }
             } else if (jsonINSUserObject.has("linking_id")) {
@@ -171,7 +185,7 @@ public class RequestHandler {
                 logger.error(message);
                 ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                         requestData.getInstitution(), message);
-                return;
+                return false;
             }
             JSONObject jsonItemObject = SCFUtil.getSCFItem(requestData);
             JSONObject jsonDigitizationRequestObject = null;
@@ -180,26 +194,29 @@ public class RequestHandler {
                         jsonItemObject, requestData);
                 if (jsonDigitizationRequestObject != null) {
                     SCFUtil.cancelTitleRequest(requestData);
+                    return true;
                 }
+                return false;
             }
             if (jsonItemObject == null) {
                 String message = "Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode();
                 logger.error(message);
                 ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                         requestData.getInstitution(), message);
-                return;
+                return false;
             }
         } catch (Exception e) {
             String message = "Create Request Failed. Barcode: " + requestData.getBarcode();
             logger.warn("Create Request Failed. Barcode: " + requestData.getBarcode());
             ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                     requestData.getInstitution(), message);
-
+            return false;
         }
+        return false;
 
     }
 
-    public static void createDigitizationUserRequest(ItemData requestData) {
+    public static boolean createDigitizationUserRequest(ItemData requestData) {
         logger.info("Create Digitization User Request. User Id : " + requestData.getUserId());
         JSONObject jsonRequestObject = SCFUtil.getINSUserRequest(requestData);
         if (jsonRequestObject == null) {
@@ -208,8 +225,9 @@ public class RequestHandler {
             ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                     requestData.getInstitution(), message);
             logger.error(message);
-            return;
+            return false;
         }
+        requestData.setMmsId(jsonRequestObject.getString("mms_id"));
         String userId = jsonRequestObject.getString("user_primary_id");
         JSONObject jsonINSUserObject = SCFUtil.getINSUser(requestData, userId, "all_unique",
                 requestData.getInstitution());
@@ -219,7 +237,7 @@ public class RequestHandler {
             ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                     requestData.getInstitution(), message);
             logger.error(message);
-            return;
+            return false;
         }
         String userLinkingId;
         String userSourceInstitution = requestData.getInstitution();
@@ -237,7 +255,7 @@ public class RequestHandler {
                     ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                             requestData.getInstitution(), message);
                     logger.error(message);
-                    return;
+                    return false;
                 }
             }
         } else if (jsonINSUserObject.has("linking_id")) {
@@ -252,9 +270,8 @@ public class RequestHandler {
             ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                     requestData.getInstitution(), message);
             logger.error(message);
-            return;
+            return false;
         }
-        requestData.setMmsId(jsonRequestObject.getString("mms_id"));
 
         JSONObject jsonBibObject = getSCFBibByInstMmsId(requestData);
         if (jsonBibObject == null) {
@@ -264,13 +281,14 @@ public class RequestHandler {
             ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                     requestData.getInstitution(), message);
             logger.error(message);
-            return;
+            return false;
         }
         JSONObject jsonDigitizationRequestObject = SCFUtil.createSCFDigitizationUserRequest(jsonUserObject,
                 jsonRequestObject, jsonBibObject, requestData);
         if (jsonDigitizationRequestObject != null) {
             SCFUtil.cancelTitleRequest(requestData);
         }
+        return true;
     }
 
     public static JSONObject getSCFBibByInstMmsId(ItemData itemData) {
@@ -293,6 +311,11 @@ public class RequestHandler {
             return null;
         }
         return jsonBibObject;
+    }
+
+    public static void cancelRequest(ItemData requestData) {
+        logger.info("Failed to create request - canceling source reqrest : " + requestData.getRequestId());
+        SCFUtil.cancelRequest(requestData);
     }
 
 }
