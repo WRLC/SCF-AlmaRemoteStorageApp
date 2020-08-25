@@ -93,7 +93,8 @@ public class SCFUtil {
         JSONObject jsonBibObject = null;
         try {
             jsonBibObject = new JSONObject(bibResponse.getBody());
-            if (jsonBibObject.has("total_record_count") && "0".equals(jsonBibObject.getString("total_record_count"))) {
+            if (jsonBibObject.has("total_record_count")
+                    && "0".equals(jsonBibObject.get("total_record_count").toString())) {
                 logger.debug(
                         "No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : " + itemData.getBarcode());
                 return null;
@@ -121,7 +122,8 @@ public class SCFUtil {
         JSONObject jsonBibObject = null;
         try {
             jsonBibObject = new JSONObject(bibResponse.getBody());
-            if (jsonBibObject.has("total_record_count") && "0".equals(jsonBibObject.getString("total_record_count"))) {
+            if (jsonBibObject.has("total_record_count")
+                    && "0".equals(jsonBibObject.get("total_record_count").toString())) {
                 logger.debug("No bib found for System Id :" + localNumber + ". Barcode : " + itemData.getBarcode());
                 return null;
             }
@@ -678,8 +680,10 @@ public class SCFUtil {
 
         JSONObject jsonRequest = getDigitizationRequestObj();
         jsonRequest.put("user_primary_id", primaryId);
-        jsonRequest.put("copyrights_declaration_signed_by_patron",
-                jsonRequestObject.get("copyrights_declaration_signed_by_patron"));
+        if (jsonRequestObject.has("copyrights_declaration_signed_by_patron")) {
+            jsonRequest.put("copyrights_declaration_signed_by_patron",
+                    jsonRequestObject.get("copyrights_declaration_signed_by_patron"));
+        }
         jsonRequest.put("description", jsonRequestObject.get("description"));
         String comment = "";
         if (jsonRequestObject.has("comment") && !jsonRequestObject.get("comment").equals(null)) {
@@ -829,8 +833,10 @@ public class SCFUtil {
 
         JSONObject jsonRequest = getDigitizationRequestObj();
         jsonRequest.put("user_primary_id", primaryId);
-        jsonRequest.put("copyrights_declaration_signed_by_patron",
-                jsonRequestObject.get("copyrights_declaration_signed_by_patron"));
+        if (jsonRequestObject.has("copyrights_declaration_signed_by_patron")) {
+            jsonRequest.put("copyrights_declaration_signed_by_patron",
+                    jsonRequestObject.get("copyrights_declaration_signed_by_patron"));
+        }
         jsonRequest.put("description", jsonRequestObject.get("description"));
         String comment = "";
         if (jsonRequestObject.has("comment") && !jsonRequestObject.get("comment").equals(null)) {
@@ -966,6 +972,20 @@ public class SCFUtil {
             logger.error(message);
         }
 
+    }
+
+    public static void refreshLinkedUser(ItemData requestData, String userId) {
+        logger.debug("refresh SCF Linked User. User Id : " + userId);
+        JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String baseUrl = props.get("gateway").toString();
+        String remoteStorageApikey = props.get("remote_storage_apikey").toString();
+        HttpResponse userResponce = UserApi.refreshLinkedUser(userId, baseUrl, remoteStorageApikey);
+        if (userResponce.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
+            logger.warn("Can't refresh SCF User. User id : " + userId);
+        }
+        if (userResponce != null && userResponce.getResponseCode() == HttpsURLConnection.HTTP_OK) {
+            logger.info("successfully refreshed user. User id : " + userId);
+        }
     }
 
 }

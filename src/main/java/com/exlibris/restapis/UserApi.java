@@ -52,4 +52,16 @@ public class UserApi {
         return userResponse;
     }
 
+    public static HttpResponse refreshLinkedUser(String userId, String baseUrl, String apiKey) {
+
+        logger.info("Starting to handle refresh Linked User.");
+        logger.info("User Id: " + userId + "- calling POST");
+
+        String url = baseUrl + "/almaws/v1/users/" + userId + "?op=refresh&apikey=" + apiKey;
+        HttpResponse userResponse = AlmaRestUtil.sendHttpReq(url, "POST", null);
+
+        return userResponse;
+
+    }
+
 }

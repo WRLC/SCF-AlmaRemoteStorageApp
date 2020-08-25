@@ -189,15 +189,6 @@ public class RequestHandler {
             }
             JSONObject jsonItemObject = SCFUtil.getSCFItem(requestData);
             JSONObject jsonDigitizationRequestObject = null;
-            if (jsonItemObject != null) {
-                jsonDigitizationRequestObject = SCFUtil.createSCFDigitizationRequest(jsonUserObject, jsonRequestObject,
-                        jsonItemObject, requestData);
-                if (jsonDigitizationRequestObject != null) {
-                    SCFUtil.cancelTitleRequest(requestData);
-                    return true;
-                }
-                return false;
-            }
             if (jsonItemObject == null) {
                 String message = "Failed to create Digitization Item Request. Barcode: " + requestData.getBarcode();
                 logger.error(message);
@@ -205,6 +196,17 @@ public class RequestHandler {
                         requestData.getInstitution(), message);
                 return false;
             }
+            logger.debug("Refresh SCF user. User Id: " + jsonUserObject.getString("primary_id"));
+            SCFUtil.refreshLinkedUser(requestData, jsonUserObject.getString("primary_id"));
+
+            jsonDigitizationRequestObject = SCFUtil.createSCFDigitizationRequest(jsonUserObject, jsonRequestObject,
+                    jsonItemObject, requestData);
+            if (jsonDigitizationRequestObject != null) {
+                SCFUtil.cancelTitleRequest(requestData);
+                return true;
+            }
+            return false;
+
         } catch (Exception e) {
             String message = "Create Request Failed. Barcode: " + requestData.getBarcode();
             logger.warn("Create Request Failed. Barcode: " + requestData.getBarcode());
@@ -212,7 +214,6 @@ public class RequestHandler {
                     requestData.getInstitution(), message);
             return false;
         }
-        return false;
 
     }
 
@@ -283,6 +284,9 @@ public class RequestHandler {
             logger.error(message);
             return false;
         }
+        logger.debug("Refresh SCF user. User Id: " + jsonUserObject.getString("primary_id"));
+        SCFUtil.refreshLinkedUser(requestData, jsonUserObject.getString("primary_id"));
+
         JSONObject jsonDigitizationRequestObject = SCFUtil.createSCFDigitizationUserRequest(jsonUserObject,
                 jsonRequestObject, jsonBibObject, requestData);
         if (jsonDigitizationRequestObject != null) {
