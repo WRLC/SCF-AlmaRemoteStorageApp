@@ -170,7 +170,9 @@ public class RequestHandler {
                         logger.error(message);
                         ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                                 requestData.getInstitution(), message);
-                        return false;
+                        // if the user cannot be created we don't want the
+                        // request cancelled
+                        return true;
                     }
                 }
             } else if (jsonINSUserObject.has("linking_id")) {
@@ -185,7 +187,9 @@ public class RequestHandler {
                 logger.error(message);
                 ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                         requestData.getInstitution(), message);
-                return false;
+                // if the user cannot be created we don't want the request
+                // cancelled
+                return true;
             }
             JSONObject jsonItemObject = SCFUtil.getSCFItem(requestData);
             JSONObject jsonDigitizationRequestObject = null;
@@ -256,7 +260,9 @@ public class RequestHandler {
                     ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                             requestData.getInstitution(), message);
                     logger.error(message);
-                    return false;
+                    // if the user cannot be created we don't want the request
+                    // cancelled
+                    return true;
                 }
             }
         } else if (jsonINSUserObject.has("linking_id")) {
@@ -271,7 +277,8 @@ public class RequestHandler {
             ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                     requestData.getInstitution(), message);
             logger.error(message);
-            return false;
+            // if the user cannot be created we don't want the request cancelled
+            return true;
         }
 
         JSONObject jsonBibObject = getSCFBibByInstMmsId(requestData);
