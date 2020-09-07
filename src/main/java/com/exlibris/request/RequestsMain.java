@@ -77,7 +77,8 @@ public class RequestsMain {
                         }
                     } catch (Exception e) {
                         ReportUtil.getInstance().appendReport("RequestHandler", "", institution,
-                                "Failed to handle request" + e.getMessage());
+                                "Failed to handle request ");
+                        logger.info("Failed to handle request " + e.getMessage());
                     }
                     if (!success) {
                         RequestHandler.cancelRequest(request);
@@ -90,8 +91,7 @@ public class RequestsMain {
             logger.info("Total Records from FTP: " + totalRecords);
 
         } catch (Exception e) {
-            ReportUtil.getInstance().appendReport("RequestHandler", "", institution,
-                    "Failed to handle requests" + e.getMessage());
+            ReportUtil.getInstance().appendReport("RequestHandler", "", institution, "Failed to handle requests");
             logger.error(e.getMessage());
         }
     }

@@ -879,7 +879,7 @@ public class SCFUtil {
         jsonRequest.put("comment", comment);
         HttpResponse requestResponse = RequestApi.createBibRequest(mmsId, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), primaryId);
-        if (requestResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
+        if (requestResponse.getResponseCode() != HttpsURLConnection.HTTP_OK) {
             String message = "Can't create SCF request. Mms Id : " + mmsId + " User Id : " + primaryId + "."
                     + requestResponse.getBody();
             logger.error(message);

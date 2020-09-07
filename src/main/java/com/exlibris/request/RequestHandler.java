@@ -108,9 +108,10 @@ public class RequestHandler {
                     message);
             return false;
         }
+
         HttpResponse requestResponse = SCFUtil.createSCFBibRequest(jsonBibObject, jsonRequestObject, itemData);
         if (requestResponse.getResponseCode() != HttpsURLConnection.HTTP_OK) {
-            String message = "Can't create SCF request. Bib Id : " + jsonBibObject.getString("mms_id") + ". "
+            String message = "Can't create SCF request. Bib Id : " + itemData.getMmsId() + ". "
                     + requestResponse.getBody();
             logger.error(message);
             ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),

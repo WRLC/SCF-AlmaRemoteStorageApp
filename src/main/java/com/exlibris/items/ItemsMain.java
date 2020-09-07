@@ -167,7 +167,8 @@ public class ItemsMain {
             fileCounter.put(xmlFile.getName(), records.size());
             logger.info("Total records from file: " + xmlFile.getName() + " :" + records.size());
         } catch (Exception e) {
-            ReportUtil.getInstance().appendReport("ItemsHandler", xmlFile.getName(), institution, e.getMessage());
+            ReportUtil.getInstance().appendReport("ItemsHandler", xmlFile.getName(), institution,
+                    "Failed to handle File " + xmlFile.getName());
             logger.error(e.getMessage());
         }
     }
