@@ -64,9 +64,7 @@ public class RequestsMain {
                             } else {
                                 success = RequestHandler.createBibRequest(request);
                             }
-                            continue;
-                        }
-                        if (request.getBarcode() != null && !request.getBarcode().isEmpty()) {
+                        } else if (request.getBarcode() != null && !request.getBarcode().isEmpty()) {
                             if (request.getRequestType().equals("PHYSICAL_TO_DIGITIZATION")) {
                                 success = RequestHandler.createDigitizationItemRequest(request);
                             } else {
