@@ -299,8 +299,9 @@ public class RequestHandler {
                 jsonRequestObject, jsonBibObject, requestData);
         if (jsonDigitizationRequestObject != null) {
             SCFUtil.cancelTitleRequest(requestData);
+            return true;
         }
-        return true;
+        return false;
     }
 
     public static JSONObject getSCFBibByInstMmsId(ItemData itemData) {
