@@ -77,7 +77,7 @@ public class SCFUtil {
         return null;
     }
 
-    public static JSONObject getSCFBibByNZ(ItemData itemData) {
+    public static HttpResponse getSCFBibByNZ(ItemData itemData) {
         logger.debug("get SCF Bib. Barcode : " + itemData.getBarcode());
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
@@ -85,26 +85,7 @@ public class SCFUtil {
         String networkNumber = itemData.getNetworkNumber();
         HttpResponse bibResponse = BibApi.retrieveBibsbyNZ(networkNumber, "full", "p_avail", baseUrl,
                 remoteStorageApikey);
-        if (bibResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
-            logger.debug(
-                    "No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : " + itemData.getBarcode());
-            return null;
-        }
-        JSONObject jsonBibObject = null;
-        try {
-            jsonBibObject = new JSONObject(bibResponse.getBody());
-            if (jsonBibObject.has("total_record_count")
-                    && "0".equals(jsonBibObject.get("total_record_count").toString())) {
-                logger.debug(
-                        "No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : " + itemData.getBarcode());
-                return null;
-            }
-        } catch (Exception e) {
-            logger.debug(
-                    "No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : " + itemData.getBarcode());
-            return null;
-        }
-        return jsonBibObject;
+        return bibResponse;
     }
 
     public static JSONObject getSCFBibByINST(ItemData itemData) {
@@ -946,7 +927,7 @@ public class SCFUtil {
         String institutionApiKey = null;
         for (int i = 0; i < props.getJSONArray("institutions").length(); i++) {
             JSONObject inst = props.getJSONArray("institutions").getJSONObject(i);
-            if (inst.get("code").toString().equals(requestData.getInstitution())) {
+            if (inst.get("code").toString().equals(requestData.getSourceInstitution())) {
                 institutionApiKey = inst.getString("apikey");
                 break;
             }

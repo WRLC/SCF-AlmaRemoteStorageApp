@@ -23,7 +23,9 @@ public class RequestHandler {
                     .getString("value");
             if ("LOAN".equals(processType)) {
                 logger.info("Item is on loan - Canceling Item Request. Barcode: " + requestData.getBarcode());
+                String institution = null;
                 if (!requestData.getSourceInstitution().isEmpty()) {
+                    institution = requestData.getInstitution();
                     requestData.setInstitution(requestData.getSourceInstitution());
                 }
                 JSONObject jsonINSTItemObject = SCFUtil.getINSItem(requestData);
@@ -42,6 +44,9 @@ public class RequestHandler {
                     ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
                             requestData.getInstitution(), message);
                     return false;
+                }
+                if (!requestData.getSourceInstitution().isEmpty() && institution != null) {
+                    requestData.setInstitution(institution);
                 }
             }
             HttpResponse requestResponse = SCFUtil.createSCFRequest(jsonItemObject, requestData);
@@ -96,7 +101,35 @@ public class RequestHandler {
         if (networkNumber != null) {
             itemData.setNetworkNumber(networkNumber);
             logger.debug("get SCF Bibbased on NZ MMS ID");
-            jsonBibObject = SCFUtil.getSCFBibByNZ(itemData);
+            HttpResponse bibResponse = SCFUtil.getSCFBibByNZ(itemData);
+            if (bibResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
+                logger.debug(
+                        "No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : " + itemData.getBarcode());
+                String message = "Create Request Failed. Mms Id : " + itemData.getMmsId() + bibResponse.getBody();
+                logger.error(message);
+                ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(),
+                        itemData.getInstitution(), message);
+                return false;
+            }
+            try {
+                jsonBibObject = new JSONObject(bibResponse.getBody());
+                if (jsonBibObject.has("total_record_count")
+                        && "0".equals(jsonBibObject.get("total_record_count").toString())) {
+                    logger.debug("No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : "
+                            + itemData.getBarcode());
+                    String message = "Create Request Failed. Mms Id : " + itemData.getMmsId() + bibResponse.getBody();
+                    ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(),
+                            itemData.getInstitution(), message);
+                    return false;
+                }
+            } catch (Exception e) {
+                logger.debug(
+                        "No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : " + itemData.getBarcode());
+                String message = "Create Request Failed. Mms Id : " + itemData.getMmsId() + bibResponse.getBody();
+                ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(),
+                        itemData.getInstitution(), message);
+                return false;
+            }
         } else {
             logger.debug("get SCF Bibbased on Local Institution MMS ID");
             jsonBibObject = SCFUtil.getSCFBibByINST(itemData);
@@ -314,10 +347,23 @@ public class RequestHandler {
         JSONObject jsonBibObject = null;
         if (networkNumber != null) {
             itemData.setNetworkNumber(networkNumber);
-            logger.debug("get SCF Bibbased on NZ MMS ID");
-            jsonBibObject = SCFUtil.getSCFBibByNZ(itemData);
+            logger.debug("get SCF Bib based on NZ MMS ID");
+            HttpResponse bibResponse = SCFUtil.getSCFBibByNZ(itemData);
+            try {
+                jsonBibObject = new JSONObject(bibResponse.getBody());
+                if (jsonBibObject.has("total_record_count")
+                        && "0".equals(jsonBibObject.get("total_record_count").toString())) {
+                    logger.debug("No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : "
+                            + itemData.getBarcode());
+                    return null;
+                }
+            } catch (Exception e) {
+                logger.debug(
+                        "No bib found for NZ :" + itemData.getNetworkNumber() + ". Barcode : " + itemData.getBarcode());
+                return null;
+            }
         } else {
-            logger.debug("get SCF Bibbased on Local Institution MMS ID");
+            logger.debug("get SCF Bib based on Local Institution MMS ID");
             jsonBibObject = SCFUtil.getSCFBibByINST(itemData);
         }
         if (jsonBibObject == null) {

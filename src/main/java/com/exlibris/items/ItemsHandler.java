@@ -2,6 +2,8 @@ package com.exlibris.items;
 
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.HttpsURLConnection;
+
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.marc4j.marc.DataField;
@@ -10,6 +12,7 @@ import org.marc4j.marc.Record;
 import org.marc4j.marc.VariableField;
 
 import com.exlibris.logger.ReportUtil;
+import com.exlibris.restapis.HttpResponse;
 import com.exlibris.util.SCFUtil;
 import com.exlibris.util.XmlUtil;
 
@@ -71,7 +74,16 @@ public class ItemsHandler {
                     }
                 } else {
                     logger.debug("get matching bib from SCF by NZ");
-                    jsonBibObject = SCFUtil.getSCFBibByNZ(itemData);
+                    HttpResponse bibResponse = SCFUtil.getSCFBibByNZ(itemData);
+                    try {
+                        jsonBibObject = new JSONObject(bibResponse.getBody());
+                        if (jsonBibObject.has("total_record_count")
+                                && "0".equals(jsonBibObject.get("total_record_count").toString())) {
+                            jsonBibObject = null;
+                        }
+                    } catch (Exception e) {
+                        jsonBibObject = null;
+                    }
                     if (jsonBibObject == null) {
                         logger.debug("The Bib does not exist in the remote Storage - Creating Bib and Holding");
                         jsonBibObject = SCFUtil.createSCFBibByNZ(itemData);
