@@ -10,7 +10,6 @@ import java.net.URL;
 import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.log4j.Logger;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 public class AlmaRestUtil {
@@ -18,7 +17,8 @@ public class AlmaRestUtil {
     final private static Logger logger = Logger.getLogger(AlmaRestUtil.class);
 
     public static HttpResponse sendHttpReq(String url, String method, String body) {
-        logger.info("Sending " + method + " request to URL : " + url.replaceAll("apikey=.*", "apikey=notOnLog"));
+        logger.info("Sending " + method + " request to URL : " + url.replaceAll("apikey=.*", "apikey=notOnLog....")
+                + url.substring(url.length() - 4));
         try {
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -45,7 +45,11 @@ public class AlmaRestUtil {
                 // logger.error("reading con.getErrorStream()...");
                 in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
             } else {
-                in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                try {
+                    in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                } catch (Exception e) {
+                    logger.info("Can't get Input Stream" + con.getResponseCode());
+                }
             }
             String inputLine;
             StringBuffer response = new StringBuffer();

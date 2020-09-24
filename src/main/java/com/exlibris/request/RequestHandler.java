@@ -23,9 +23,7 @@ public class RequestHandler {
                     .getString("value");
             if ("LOAN".equals(processType)) {
                 logger.info("Item is on loan - Canceling Item Request. Barcode: " + requestData.getBarcode());
-                String institution = null;
                 if (!requestData.getSourceInstitution().isEmpty()) {
-                    institution = requestData.getInstitution();
                     requestData.setInstitution(requestData.getSourceInstitution());
                 }
                 JSONObject jsonINSTItemObject = SCFUtil.getINSItem(requestData);
@@ -45,9 +43,9 @@ public class RequestHandler {
                             requestData.getInstitution(), message);
                     return false;
                 }
-                if (!requestData.getSourceInstitution().isEmpty() && institution != null) {
-                    requestData.setInstitution(institution);
-                }
+                logger.info("SCF item is on loan - successfully canceled institution " + requestData.getInstitution()
+                        + " item request. Barcode: " + requestData.getBarcode());
+                return true;
             }
             HttpResponse requestResponse = SCFUtil.createSCFRequest(jsonItemObject, requestData);
             if (requestResponse == null) {
