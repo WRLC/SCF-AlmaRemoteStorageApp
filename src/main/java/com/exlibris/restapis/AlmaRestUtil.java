@@ -73,6 +73,7 @@ public class AlmaRestUtil {
                     logger.info("message: " + out);
                 } catch (Exception e) {
                     logger.info("message: " + out);
+                    out = "Failed Sending " + method + " request to URL - Response Code : " + con.getResponseCode();
                 }
             }
 
