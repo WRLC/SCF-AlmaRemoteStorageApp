@@ -37,7 +37,7 @@ public class ReportUtil {
 
             String date = new SimpleDateFormat("yyyyMMdd").format(new Date());
             String filePath = reportFileFolder + reportName + "_log_" + date + ".csv";
-            String line = "\"" + barcode + "\"," + institution + "," + message + ",\n";
+            String line = "\"" + encodeCsv(barcode) + "\"," + encodeCsv(institution) + "," + encodeCsv(message) + ",\n";
             if (Files.notExists(Paths.get(filePath), LinkOption.NOFOLLOW_LINKS)) {
                 Files.write(Paths.get(filePath), HEADER.getBytes(), StandardOpenOption.CREATE,
                         StandardOpenOption.APPEND);
@@ -52,6 +52,13 @@ public class ReportUtil {
         if (instance == null)
             instance = new ReportUtil();
         return instance;
+    }
+
+    public static String encodeCsv(String value) {
+        // Super CSV escapes double-quotes with a preceding double-quote.
+        // Please note that the sometimes-used convention of escaping
+        // double-quotes as \" (instead of "") is not supported.
+        return value.replaceAll("\"", "\"\"");
     }
 
 }
