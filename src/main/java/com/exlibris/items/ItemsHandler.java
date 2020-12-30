@@ -2,8 +2,6 @@ package com.exlibris.items;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.HttpsURLConnection;
-
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.marc4j.marc.DataField;

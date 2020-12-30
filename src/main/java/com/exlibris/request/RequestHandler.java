@@ -67,7 +67,7 @@ public class RequestHandler {
         JSONObject jsonRequestObject = null;
         if (itemData.getMmsId() != null) {
             logger.info("Create Bib Request.get Institution  : " + itemData.getSourceInstitution() + " Request : "
-                    + itemData.getRequestId() + "By Mms Id : " + itemData.getMmsId());
+                    + itemData.getRequestId() + " By Mms Id : " + itemData.getMmsId());
             jsonRequestObject = SCFUtil.getINSRequest(itemData);
         } else {
             logger.info("Create Bib Request.get Institution : " + itemData.getSourceInstitution() + " Request : "
@@ -147,6 +147,9 @@ public class RequestHandler {
             logger.error(message);
             ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
                     message);
+            //if (requestResponse.getBody().toLowerCase().contains("patron has active request for selected item")) {
+            //    return true;
+            //}
             return false;
         }
         return true;

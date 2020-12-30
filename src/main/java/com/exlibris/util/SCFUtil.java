@@ -371,6 +371,9 @@ public class SCFUtil {
             logger.error(message);
             ReportUtil.getInstance().appendReport("RequestHandler", itemData.getBarcode(), itemData.getInstitution(),
                     message);
+            //if (requestResponse.getBody().toLowerCase().contains("patron has active request for selected item")) {
+            //   return requestResponse;
+            //}
             return null;
         }
         return requestResponse;
@@ -405,8 +408,15 @@ public class SCFUtil {
             }
             if (jsonRequestObject.has("manual_description") && !jsonRequestObject.get("manual_description").equals(null)
                     && !jsonRequestObject.get("manual_description").equals("")) {
-                jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
-                comment += " " + jsonRequestObject.get("manual_description");
+                String holdingLib = props.get("remote_storage_holding_library").toString();
+                String holdingLoc = props.get("remote_storage_holding_location").toString();
+                String holdingId = getSCFHoldingByBib(mmsId, holdingLib, holdingLoc, baseUrl, remoteStorageApikey);
+                if (holdingId != null) {
+                    jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
+                    jsonRequest.put("holding_id", holdingId);
+                } else {
+                    comment += " " + jsonRequestObject.get("manual_description");
+                }
             }
             if (jsonRequestObject.has("volume")) {
                 jsonRequest.put("volume", jsonRequestObject.get("volume"));
@@ -967,6 +977,33 @@ public class SCFUtil {
         if (userResponce != null && userResponce.getResponseCode() == HttpsURLConnection.HTTP_OK) {
             logger.info("successfully refreshed user. User id : " + userId);
         }
+    }
+
+    private static String getSCFHoldingByBib(String mmsId, String holdingLib, String holdingLoc, String baseUrl,
+            String remoteStorageApikey) {
+        logger.debug("get SCF Holdings. MMS Id : " + mmsId);
+        HttpResponse holdingsResponce = HoldingApi.getHoldings(mmsId, baseUrl, remoteStorageApikey);
+        if (holdingsResponce.getResponseCode() != HttpsURLConnection.HTTP_OK) {
+            logger.warn("Can't get SCF Holdings - " + holdingsResponce.getBody());
+            return null;
+        }
+        JSONObject jsonHoldingObject = new JSONObject(holdingsResponce.getBody());
+        JSONArray holdings = jsonHoldingObject.getJSONArray("holding");
+
+        for (int i = 0; i < holdings.length(); i++) {
+            try {
+                JSONObject holding = holdings.getJSONObject(i);
+
+                if (holding.getJSONObject("library").getString("value").equals(holdingLib)
+                        && holding.getJSONObject("location").getString("value").equals(holdingLoc)) {
+                    return holding.getString("holding_id");
+                }
+            } catch (Exception e) {
+                logger.info("Failed getting holding information error: " + e.getMessage() + " Holdings Responce: "
+                        + holdingsResponce.getBody());
+            }
+        }
+        return null;
     }
 
 }
