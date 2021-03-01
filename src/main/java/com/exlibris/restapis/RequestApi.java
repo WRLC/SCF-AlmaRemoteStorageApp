@@ -16,7 +16,7 @@ public class RequestApi {
         logger.info("Item Id: " + itemId + " - calling POST");
 
         String url = baseurl + "/almaws/v1/bibs/" + mmsId + "/holdings/" + holdingId + "/items/" + itemId
-                + "/requests?user_id=" + userId + "&allow_same_request=true&apikey=" + apiKey;
+                + "/requests?user_id=" + encodeValue(userId) + "&allow_same_request=true&apikey=" + apiKey;
         HttpResponse requestResponse = AlmaRestUtil.sendHttpReq(url, "POST", body);
 
         return requestResponse;
@@ -40,7 +40,7 @@ public class RequestApi {
         logger.info("Starting to handle creating Request: " + body + ".");
         logger.info("Mms Id: " + mmsId + " - calling POST");
 
-        String url = baseUrl + "/almaws/v1/bibs/" + mmsId + "/requests?user_id=" + userId
+        String url = baseUrl + "/almaws/v1/bibs/" + mmsId + "/requests?user_id=" + encodeValue(userId)
                 + "&allow_same_request=true&apikey=" + apiKey;
         HttpResponse bibResponse = AlmaRestUtil.sendHttpReq(url, "POST", body);
 
