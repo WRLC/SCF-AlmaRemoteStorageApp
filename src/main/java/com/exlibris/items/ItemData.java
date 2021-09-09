@@ -40,6 +40,7 @@ public class ItemData {
     private String requestId;
     private String userId;
     private String sourceInstitution;
+    private PatronInfo patron;
 
     public ItemData(String mmsId, String barcode, String institution, String library, String location,
             String networkNumber, String note) {
@@ -144,8 +145,17 @@ public class ItemData {
     public void setSourceInstitution(String sourceInstitution) {
         this.sourceInstitution = sourceInstitution;
     }
+    
 
-    public static ItemData dataFieldToItemData(String mmsId, DataField dataField, String institution, String nZMmsId) {
+    public PatronInfo getPatron() {
+		return patron;
+	}
+
+	public void setPatron(PatronInfo patron) {
+		this.patron = patron;
+	}
+
+	public static ItemData dataFieldToItemData(String mmsId, DataField dataField, String institution, String nZMmsId) {
         String barcode = dataField.getSubfieldsAsString(BARCODE_SUB_FIELD);
         String library = dataField.getSubfieldsAsString(LIBRARY_SUB_FIELD);
         String location = dataField.getSubfieldsAsString(LOCATION_SUB_FIELD);
@@ -221,6 +231,19 @@ public class ItemData {
                 } catch (Exception e) {
                     logger.debug("can't get patronIdentifier, " + e.getMessage());
                 }
+            }
+            // Include requester information in physical item requests
+            if (element.getElementsByTagName("xb:patronInfo").item(0) != null) {
+            	Element patronInfoElement = (Element) element.getElementsByTagName("xb:patronInfo").item(0);
+            	String name = patronInfoElement.getElementsByTagName("xb:patronName").item(0) == null ? null
+                        : patronInfoElement.getElementsByTagName("xb:patronName").item(0).getTextContent();
+            	String identifier = patronInfoElement.getElementsByTagName("xb:patronIdentifier").item(0) == null ? null
+                        : patronInfoElement.getElementsByTagName("xb:patronIdentifier").item(0).getTextContent();
+            	String email = patronInfoElement.getElementsByTagName("xb:patronEmail").item(0) == null ? null
+                        : patronInfoElement.getElementsByTagName("xb:patronEmail").item(0).getTextContent();
+            	String address = patronInfoElement.getElementsByTagName("xb:patronAddress").item(0) == null ? null
+                        : patronInfoElement.getElementsByTagName("xb:patronAddress").item(0).getTextContent();
+            	itemData.setPatron(new PatronInfo(name, identifier, email, address));
             }
             requestDataList.add(itemData);
         }

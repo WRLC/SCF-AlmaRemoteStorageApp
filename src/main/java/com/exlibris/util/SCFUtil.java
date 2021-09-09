@@ -401,7 +401,10 @@ public class SCFUtil {
         if (jsonRequestObject.has("comment") && !jsonRequestObject.get("comment").equals(null)) {
             comment += jsonRequestObject.getString("comment") + " ";
         }
-        comment += "The inventory for this request should come from " + itemData.getSourceInstitution();
+        comment += "The inventory for this request should come from " + itemData.getSourceInstitution()+". ";
+        if(itemData.getPatron() != null) {
+        	comment += "Patron: "+itemData.getPatron().getName()+", "+itemData.getPatron().getId()+", "+itemData.getPatron().getEmail()+", "+itemData.getPatron().getAddress();
+        }
         if (jsonRequestObject != null) {
             if (itemData.getDescription() == null && jsonRequestObject.has("description")) {
                 jsonRequest.put("description", jsonRequestObject.get("description"));
@@ -680,7 +683,10 @@ public class SCFUtil {
         if (jsonRequestObject.has("comment") && !jsonRequestObject.get("comment").equals(null)) {
             comment = jsonRequestObject.getString("comment") + " ";
         }
-        comment += "The inventory for this request should come from " + requestData.getSourceInstitution();
+        comment += "The inventory for this request should come from " + requestData.getSourceInstitution()+". ";
+        if(requestData.getPatron() != null) {
+        	comment += "Patron: "+requestData.getPatron().getName()+", "+requestData.getPatron().getId()+", "+requestData.getPatron().getEmail()+", "+requestData.getPatron().getAddress();
+        }
         jsonRequest.put("partial_digitization", jsonRequestObject.get("partial_digitization"));
         if (jsonRequestObject.has("required_pages_range")) {
             jsonRequest.put("required_pages_range", jsonRequestObject.get("required_pages_range"));
@@ -833,7 +839,10 @@ public class SCFUtil {
         if (jsonRequestObject.has("comment") && !jsonRequestObject.get("comment").equals(null)) {
             comment = jsonRequestObject.getString("comment") + " ";
         }
-        comment += "The inventory for this request should come from " + requestData.getSourceInstitution();
+        comment += "The inventory for this request should come from " + requestData.getSourceInstitution()+". ";
+        if(requestData.getPatron() != null) {
+        	comment += "Patron: "+requestData.getPatron().getName()+", "+requestData.getPatron().getId()+", "+requestData.getPatron().getEmail()+", "+requestData.getPatron().getAddress();
+        }
         jsonRequest.put("partial_digitization", jsonRequestObject.get("partial_digitization"));
         if (jsonRequestObject.has("required_pages_range")) {
             jsonRequest.put("required_pages_range", jsonRequestObject.get("required_pages_range"));
