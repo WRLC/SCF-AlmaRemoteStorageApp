@@ -1003,6 +1003,12 @@ public class SCFUtil {
                         + holdingsResponce.getBody());
             }
         }
+        
+        if(holdings.length() > 0) {
+        	//get the first location
+        	JSONObject holding = holdings.getJSONObject(0);
+        	return holding.getString("holding_id");
+        }
         return null;
     }
 
