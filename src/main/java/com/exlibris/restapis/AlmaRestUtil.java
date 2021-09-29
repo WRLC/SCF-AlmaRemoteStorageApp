@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -15,8 +16,33 @@ import org.json.JSONObject;
 public class AlmaRestUtil {
 
     final private static Logger logger = Logger.getLogger(AlmaRestUtil.class);
-
+    
+    public static final int PER_SECOND_THRESHOLD = 429;
+    public static final int ERROR_WINHTTP_SECURE_FAILURE = 600;
+    
     public static HttpResponse sendHttpReq(String url, String method, String body) {
+    	HttpResponse httpResponse = null;
+    	int code = HttpsURLConnection.HTTP_INTERNAL_ERROR;
+        while (code >= HttpsURLConnection.HTTP_INTERNAL_ERROR && code < ERROR_WINHTTP_SECURE_FAILURE
+                && code != PER_SECOND_THRESHOLD) {
+                httpResponse = sendReq(url,method, body);
+                if (httpResponse != null) {
+                    code = httpResponse.getResponseCode();
+                }
+                if (code >= HttpsURLConnection.HTTP_INTERNAL_ERROR && code <= HttpsURLConnection.HTTP_VERSION
+                        && code != PER_SECOND_THRESHOLD) {
+                    logger.info("Response Code " + code + ". Thread sleeping for 5 minutes.");
+                    try {
+						TimeUnit.MINUTES.sleep(5);
+					} catch (InterruptedException e) {
+					}
+                }
+        }
+        return httpResponse;
+    }
+    
+
+    public static HttpResponse sendReq(String url, String method, String body) {
         logger.info("Sending " + method + " request to URL : " + url.replaceAll("apikey=.*", "apikey=notOnLog....")
                 + url.substring(url.length() - 4));
         try {
