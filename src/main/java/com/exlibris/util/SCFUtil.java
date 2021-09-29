@@ -363,6 +363,10 @@ public class SCFUtil {
         String userId = getUserIdByIns(itemData);
         JSONObject jsonRequest = getRequestObj();
         jsonRequest.put("user_primary_id", userId);
+        
+        if(itemData.getPatron() != null) {
+        	jsonRequest.put("comment", itemData.getPatron().toString());
+        }
 
         HttpResponse requestResponse = RequestApi.createRequest(mmsId, holdingId, itemPid, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), userId);
@@ -403,7 +407,7 @@ public class SCFUtil {
         }
         comment += "The inventory for this request should come from " + itemData.getSourceInstitution()+". ";
         if(itemData.getPatron() != null) {
-        	comment += "Patron: "+itemData.getPatron().getName()+", "+itemData.getPatron().getId()+", "+itemData.getPatron().getEmail()+", "+itemData.getPatron().getAddress();
+        	comment += itemData.getPatron().toString();
         }
         if (jsonRequestObject != null) {
             if (itemData.getDescription() == null && jsonRequestObject.has("description")) {
@@ -685,7 +689,7 @@ public class SCFUtil {
         }
         comment += "The inventory for this request should come from " + requestData.getSourceInstitution()+". ";
         if(requestData.getPatron() != null) {
-        	comment += "Patron: "+requestData.getPatron().getName()+", "+requestData.getPatron().getId()+", "+requestData.getPatron().getEmail()+", "+requestData.getPatron().getAddress();
+        	comment += requestData.getPatron().toString();
         }
         jsonRequest.put("partial_digitization", jsonRequestObject.get("partial_digitization"));
         if (jsonRequestObject.has("required_pages_range")) {
@@ -841,7 +845,7 @@ public class SCFUtil {
         }
         comment += "The inventory for this request should come from " + requestData.getSourceInstitution()+". ";
         if(requestData.getPatron() != null) {
-        	comment += "Patron: "+requestData.getPatron().getName()+", "+requestData.getPatron().getId()+", "+requestData.getPatron().getEmail()+", "+requestData.getPatron().getAddress();
+        	comment += requestData.getPatron().toString();
         }
         jsonRequest.put("partial_digitization", jsonRequestObject.get("partial_digitization"));
         if (jsonRequestObject.has("required_pages_range")) {

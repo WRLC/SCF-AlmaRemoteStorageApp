@@ -15,6 +15,11 @@ public class PatronInfo {
 		this.address = address;
 	}
 
+	@Override
+	public String toString() {
+		return "Patron: "+getName()+", "+getId()+", "+getEmail()+", "+getAddress();
+	}
+
 	public String getName() {
 		return name;
 	}
