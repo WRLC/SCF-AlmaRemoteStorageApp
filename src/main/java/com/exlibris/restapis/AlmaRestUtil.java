@@ -19,8 +19,10 @@ public class AlmaRestUtil {
     
     public static final int PER_SECOND_THRESHOLD = 429;
     public static final int ERROR_WINHTTP_SECURE_FAILURE = 600;
+    public static final int THREE_HOURS_COUNTER  = 36;
     
     public static HttpResponse sendHttpReq(String url, String method, String body) {
+    	int counter = 0;
     	HttpResponse httpResponse = null;
     	int code = HttpsURLConnection.HTTP_INTERNAL_ERROR;
         while (code >= HttpsURLConnection.HTTP_INTERNAL_ERROR && code < ERROR_WINHTTP_SECURE_FAILURE
@@ -31,11 +33,17 @@ public class AlmaRestUtil {
                 }
                 if (code >= HttpsURLConnection.HTTP_INTERNAL_ERROR && code <= HttpsURLConnection.HTTP_VERSION
                         && code != PER_SECOND_THRESHOLD) {
+                	if(counter >= THREE_HOURS_COUNTER) {
+                    	logger.error("Response Code " + code + ". Thread not sleeping for 5 minutes anymore.");
+                    	return httpResponse;
+                    }
                     logger.info("Response Code " + code + ". Thread sleeping for 5 minutes.");
+                    counter ++;
                     try {
 						TimeUnit.MINUTES.sleep(5);
 					} catch (InterruptedException e) {
 					}
+                    
                 }
         }
         return httpResponse;

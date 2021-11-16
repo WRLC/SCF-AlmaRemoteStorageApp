@@ -102,7 +102,7 @@ public class ItemsHandler {
                     }
                 }
                 if (holdingId == null) {
-                    logger.debug("The Holding does not exist in the remote Storage - Creating Holding");
+                    logger.debug("The Holdinnng does not exist in the remote Storage - Creating Holding");
                     holdingId = SCFUtil.createSCFHoldingAndGetId(jsonBibObject, mmsId);
                 }
                 if (holdingId != null) {
@@ -112,8 +112,10 @@ public class ItemsHandler {
                         TimeUnit.SECONDS.sleep(3);
                     } catch (InterruptedException e) {
                     }
-                    logger.debug("Loan the new Item who was created");
-                    SCFUtil.createSCFLoan(itemData, itemPid);
+                    if(itemPid != null) {
+	                    logger.debug("Loan the new Item who was created");
+	                    SCFUtil.createSCFLoan(itemData, itemPid);
+                    }
                 } else {
                     String message = "Can't create SCF holding. MMS ID : " + mmsId;
                     ReportUtil.getInstance().appendReport("ItemsHandler", itemData.getBarcode(),

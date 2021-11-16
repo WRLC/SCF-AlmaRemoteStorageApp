@@ -40,7 +40,11 @@ public class ManageWebHookMessages {
         }
         logger.info("action is :" + webhookJsonMessage.get("action"));
         try {
-            logger.info("event is :" + webhookJsonMessage.getJSONObject("event").get("value"));
+        	if(webhookJsonMessage.has("event") && ! webhookJsonMessage.isNull("event")) {
+        		logger.info("event is :" + webhookJsonMessage.getJSONObject("event").get("value"));
+        	}else {
+        		logger.debug("no event in webhook message");
+        	}
         } catch (JSONException e) {
             logger.debug("no event in webhook message");
         }
@@ -74,6 +78,7 @@ public class ManageWebHookMessages {
             String jobId = webhookMessage.getJSONObject("job_instance").getJSONObject("job_info").getString("id");
             String institution = getInstitutionByJobId(jobId, "publishing_job_id");
             if (institution != null) {
+            	logger.debug("Merge Items With SCF. Job Id: " + jobId + " Institution: "+institution);
                 ItemsMain.mergeItemsWithSCF(institution);
                 return;
             }
