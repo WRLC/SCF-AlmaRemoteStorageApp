@@ -103,7 +103,7 @@ public class ItemsHandler {
                 }
                 if (holdingId == null) {
                     logger.debug("The Holdinnng does not exist in the remote Storage - Creating Holding");
-                    holdingId = SCFUtil.createSCFHoldingAndGetId(jsonBibObject, mmsId);
+                    holdingId = SCFUtil.createSCFHoldingAndGetId(jsonBibObject, mmsId, itemData);
                 }
                 if (holdingId != null) {
                     logger.debug("Creating Item Based SCF on mmsId and holdingId");

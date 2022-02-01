@@ -1,11 +1,14 @@
 package com.exlibris.util;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.Record;
@@ -15,6 +18,7 @@ import com.exlibris.configuration.ConfigurationHandler;
 import com.exlibris.items.ItemData;
 import com.exlibris.logger.ReportUtil;
 import com.exlibris.restapis.BibApi;
+import com.exlibris.restapis.ConfApi;
 import com.exlibris.restapis.HoldingApi;
 import com.exlibris.restapis.HttpResponse;
 import com.exlibris.restapis.ItemApi;
@@ -27,6 +31,8 @@ public class SCFUtil {
     final private static Logger logger = Logger.getLogger(SCFUtil.class);
     final private static String HOL_XML_TEMPLATE = "<holding><record><datafield ind1=\"0\" ind2=\" \" tag=\"852\"><subfield code=\"b\">_LIB_CODE_</subfield><subfield code=\"c\">_LOC_CODE_</subfield></datafield></record><suppress_from_publishing>false</suppress_from_publishing></holding>";
 
+    private static Set<String> locationList = new HashSet<String>();
+    
     public static String getSCFHoldingFromRecordAVA(String record) {
         try {
             // no AVA fields
@@ -174,17 +180,18 @@ public class SCFUtil {
         return jsonNewBibObject;
     }
 
-    public static String createSCFHoldingAndGetId(JSONObject jsonBibObject, String mmsId) {
-        return createSCFHolding(jsonBibObject, mmsId);
+    public static String createSCFHoldingAndGetId(JSONObject jsonBibObject, String mmsId, ItemData itemData) {
+        return createSCFHolding(jsonBibObject, mmsId, itemData);
     }
 
-    private static String createSCFHolding(JSONObject jsonBibObject, String mmsId) {
+    private static String createSCFHolding(JSONObject jsonBibObject, String mmsId, ItemData itemData) {
         logger.debug("create SCF Holding. MMS ID : " + mmsId);
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
         String baseUrl = props.get("gateway").toString();
         String holdingLib = props.get("remote_storage_holding_library").toString();
-        String holdingLoc = props.get("remote_storage_holding_location").toString();
+        String defultholdingLoc = props.get("remote_storage_holding_location").toString();
+        String holdingLoc = getLocationForNewHolding(holdingLib,defultholdingLoc,itemData);
         String holdingBody = HOL_XML_TEMPLATE.replace("_LIB_CODE_", holdingLib).replace("_LOC_CODE_", holdingLoc);
         HttpResponse holdingResponse = HoldingApi.createHolding(mmsId, holdingBody, baseUrl, remoteStorageApikey);
         if (holdingResponse.getResponseCode() == HttpsURLConnection.HTTP_BAD_REQUEST) {
@@ -195,7 +202,40 @@ public class SCFUtil {
         return jsonHoldingObject.getString("holding_id");
     }
 
-    public static JSONObject getINSItem(ItemData itemData) {
+    private static String getLocationForNewHolding(String holdingLib,String defultholdingLoc, ItemData itemData) {
+    	logger.debug("get SCF loctions for library :" + holdingLib );
+    	if(locationList.contains(itemData.getLocation())){
+        	return itemData.getLocation();
+        }
+    	
+    	logger.debug("get SCF loctions for library :" + holdingLib +" getting locations from API");
+    	JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+        String remoteStorageApikey = props.get("remote_storage_apikey").toString();
+        String baseUrl = props.get("gateway").toString();
+        HttpResponse locationsResponse = ConfApi.retrieveLibraryLocations(holdingLib, baseUrl,remoteStorageApikey);
+        
+        if (locationsResponse.getResponseCode() < HttpsURLConnection.HTTP_OK
+                || locationsResponse.getResponseCode() >= HttpsURLConnection.HTTP_MOVED_PERM) {
+            logger.warn("Can't get SCF Library Locations - " + locationsResponse.getBody() + ". Library : "
+                    + holdingLib);
+            return defultholdingLoc;
+        }
+        JSONObject librariesJson = new JSONObject(locationsResponse.getBody());
+        for (int i = 0; i < librariesJson.getJSONArray("location").length(); i++) {
+            JSONObject location = librariesJson.getJSONArray("location").getJSONObject(i);
+            try {
+            	locationList.add(location.getString("code"));
+            } catch (JSONException e) {
+            }
+        }
+        if(locationList.contains(itemData.getLocation())){
+        	return itemData.getLocation();
+        }
+        logger.debug("SCF loction for library :" + holdingLib +" and location " + itemData.getLocation() + " does not exist returning defult location");
+        return defultholdingLoc;
+	}
+
+	public static JSONObject getINSItem(ItemData itemData) {
         logger.debug("get institution : " + itemData.getInstitution() + " Item. Barcode : " + itemData.getBarcode());
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String baseUrl = props.get("gateway").toString();
