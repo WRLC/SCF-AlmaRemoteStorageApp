@@ -2,6 +2,7 @@ package com.exlibris.request;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -53,7 +54,12 @@ public class RequestsMain {
             int totalRecords = 0;
             for (File xmlFile : xmlFiles) {
                 String content = new String(Files.readAllBytes(xmlFile.toPath()));
-                List<ItemData> requestList = ItemData.xmlStringToRequestData(content, institution);
+                List<ItemData> requestList = new ArrayList<ItemData>();
+                try {
+                	requestList = ItemData.xmlStringToRequestData(content, institution);
+                }catch (Exception e) {
+                	logger.info("Failed to handle file " + xmlFile.getName() + " " + e.getMessage());
+				}
                 for (ItemData request : requestList) {
                     boolean success = false;
                     try {
