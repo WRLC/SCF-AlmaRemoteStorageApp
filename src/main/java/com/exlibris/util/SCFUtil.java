@@ -283,6 +283,7 @@ public class SCFUtil {
         instItem.getJSONObject("item_data").remove("location");
         instItem.getJSONObject("item_data").remove("policy");
         instItem.getJSONObject("item_data").remove("internal_note_1");
+        instItem.getJSONObject("item_data").remove("internal_note_3");
         instItem.getJSONObject("item_data").remove("call_number");
         instItem.getJSONObject("holding_data").remove("temp_library");
         instItem.getJSONObject("holding_data").remove("in_temp_location");
@@ -346,6 +347,7 @@ public class SCFUtil {
                 scfItemData.get("alternative_call_number_type"));
         instItem.getJSONObject("item_data").put("storage_location_id", scfItemData.get("storage_location_id"));
         instItem.getJSONObject("item_data").put("internal_note_1", scfItemData.get("internal_note_1"));
+        instItem.getJSONObject("item_data").put("internal_note_3", scfItemData.get("internal_note_3"));
         instItem.getJSONObject("item_data").put("statistics_note_2", scfItemData.get("statistics_note_2"));
         instItem.put("holding_data", scfItem.get("holding_data"));
         instItem.put("bib_data", scfItem.get("bib_data"));
