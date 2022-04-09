@@ -9,6 +9,7 @@ import org.marc4j.marc.MarcFactory;
 import org.marc4j.marc.Record;
 import org.marc4j.marc.VariableField;
 
+import com.exlibris.configuration.ConfigurationHandler;
 import com.exlibris.logger.ReportUtil;
 import com.exlibris.restapis.HttpResponse;
 import com.exlibris.util.SCFUtil;
@@ -125,9 +126,18 @@ public class ItemsHandler {
         } else {
             logger.debug("The item exists in the remote Storage");
             if (!SCFUtil.isItemInRemoteStorage(itemData)) {
-                logger.debug(
-                        "Item exists in the SCF, but in the Institution it's no in a remote-storage location need to delete it from SCF");
-                SCFUtil.deleteSCFItem(jsonItemObject, itemData);
+            	boolean ignoreDeleteFiles = true;
+            	JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
+                if (props.has("ignore_delete_files") && props.get("ignore_delete_files") != null) {
+                    ignoreDeleteFiles = Boolean.valueOf(props.getString("ignore_delete_files"));
+                }
+                if (ignoreDeleteFiles ) {
+                    logger.info("Item exists in the SCF, but in the Institution it's no in a remote-storage location  - Ignoring delete from the SCF");
+                }else {
+	                logger.debug(
+	                        "Item exists in the SCF, but in the Institution it's no in a remote-storage location need to delete it from SCF");
+	                SCFUtil.deleteSCFItem(jsonItemObject, itemData);
+                }
             } else {
                 logger.debug("Item exists merge between INST item and SCF item");
                 SCFUtil.updateSCFItem(itemData, jsonItemObject);
