@@ -57,6 +57,8 @@ public class AlmaRestUtil {
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             con.setRequestMethod(method);
+            con.setConnectTimeout(5000); //set timeout to 5 seconds
+            con.setReadTimeout(500000);
             con.setRequestProperty("Accept", "application/json");
             if (body != null) {
                 try {
