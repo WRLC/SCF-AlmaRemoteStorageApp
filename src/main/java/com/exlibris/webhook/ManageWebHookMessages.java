@@ -88,30 +88,59 @@ public class ManageWebHookMessages {
                 return;
             }
             logger.debug("The Job does not exist in the configuration jobs list. Job Id: " + jobId);
+            break;
         }
-        case REQUEST: {
-            String event = webhookMessage.getJSONObject("event").getString("value");
-            if (event.equals("REQUEST_CANCELED")) {
-                String webhookMessageInstitution = webhookMessage.getJSONObject("institution").getString("value");
-                if (webhookMessageInstitution.equalsIgnoreCase(remoteStorageInstitution)) {
-                    String barcode = null;
-                    try {
-                        barcode = webhookMessage.getJSONObject("user_request").getString("barcode");
-                    } catch (Exception e) {
-                        logger.debug("The item barcode does not exist in the webhook message");
-                    }
-                    if (barcode != null && !barcode.isEmpty()) {
-                        if (barcode.endsWith("X")) {
-                            barcode = barcode.substring(0, barcode.length() - 1);
-                        } else {
-                            logger.info("Request Not Part Of SCF.  Barcode: " + barcode);
-                            return;
-                        }
-                        requestCanceled(barcode);
-                    }
-                }
-            }
-        }
+		case REQUEST: {
+			String event = webhookMessage.getJSONObject("event").getString("value");
+			if (event.equals("REQUEST_CANCELED")) {
+				String webhookMessageInstitution = webhookMessage.getJSONObject("institution").getString("value");
+				if (webhookMessageInstitution.equalsIgnoreCase(remoteStorageInstitution)) {
+					if (webhookMessage.has("user_request")) {
+						JSONObject userRequest = webhookMessage.getJSONObject("user_request");
+						if (userRequest.has("barcode") && !JSONObject.NULL.equals(userRequest.get("barcode"))) {
+							String barcode = webhookMessage.getJSONObject("user_request").getString("barcode");
+							if (barcode != null && !barcode.isEmpty()) {
+								if (barcode.endsWith("X")) {
+									barcode = barcode.substring(0, barcode.length() - 1);
+								} else {
+									logger.info("Request Not Part Of SCF.  Barcode: " + barcode);
+									return;
+								}
+								requestCanceled(barcode);
+							}
+						} else if (userRequest.has("comment") && !JSONObject.NULL.equals(userRequest.get("comment"))) {
+							String comment = userRequest.getString("comment");
+							// example : {Source Request 01WRLC_code-requestId-userPrimaryId}
+							try {
+								String sourceRequestDetails = comment.substring(comment.indexOf("{Source Request "));
+								sourceRequestDetails = sourceRequestDetails.substring("{Source Request ".length());
+								String institution = sourceRequestDetails.substring(0,sourceRequestDetails.indexOf("-"));
+
+								String sourceRequestId = sourceRequestDetails.substring(sourceRequestDetails.indexOf("-") + 1);
+								sourceRequestId = sourceRequestId.substring(0, sourceRequestId.indexOf("-"));
+
+								String sourceRequestUser = sourceRequestDetails.substring(sourceRequestDetails.indexOf("-", sourceRequestDetails.indexOf("-") + 1) + 1);
+								sourceRequestUser = sourceRequestUser.substring(0, sourceRequestUser.indexOf("}"));
+
+								if (institution != null && !institution.isBlank() && sourceRequestId != null
+										&& !sourceRequestId.isBlank() && sourceRequestUser != null
+										&& !sourceRequestUser.isBlank()) {
+									requestCanceledBibLevel(sourceRequestUser, sourceRequestId, institution);
+								}else {
+									logger.debug("Request Not Part Of SCF - Not canceling source request");
+								}
+							} catch (Exception e) {
+								logger.debug("Request Not Part Of SCF - Not canceling source request");
+								return;
+							}
+						} else {
+							logger.debug(
+									"The barcode or comment does not exist in the webhook message - Not canceling source request");
+						}
+					}
+				}
+			}
+		}
         default:
             break;
 
@@ -227,6 +256,20 @@ public class ManageWebHookMessages {
         }
     }
 
+    private static void requestCanceledBibLevel(String sourceRequestUser, String sourceRequestId, String institution) {
+    	logger.info("Request source institution is :" + institution);
+        logger.info("Cancel Request. Source Institution User: " + sourceRequestUser);
+        logger.info("Cancel Request. Source Institution Id: " + sourceRequestId); 
+        
+        ItemData requestData = new ItemData(null);
+        requestData.setSourceInstitution(institution);
+        requestData.setRequestId(sourceRequestId);
+        requestData.setUserId(sourceRequestUser);
+        
+        SCFUtil.cancelRequest(requestData);
+        
+		
+	}
     private static String getInstitutionByJobId(String jobId, String jobType) {
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         JSONArray institutions = props.getJSONArray("institutions");

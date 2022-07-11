@@ -481,6 +481,7 @@ public class SCFUtil {
             }
 
         }
+        comment += " {Source Request " + itemData.getSourceInstitution()+"-" + jsonRequestObject.get("request_id") + "-"  +jsonRequestObject.get("user_primary_id") +"}";
         jsonRequest.put("comment", comment);
         HttpResponse requestResponse = RequestApi.createBibRequest(mmsId, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), userId);
@@ -1003,7 +1004,7 @@ public class SCFUtil {
                     "CannotBeFulfilled", "Request could not be fulfilled by the SCF.", "true", baseUrl,
                     institutionApiKey);
         } else if (requestData.getUserId() != null) {
-            requestsResponce = RequestApi.cancleUserRequest(requestData.getMmsId(), requestData.getRequestId(),
+            requestsResponce = RequestApi.cancleUserRequest(requestData.getUserId(), requestData.getRequestId(),
                     "CannotBeFulfilled", "Request could not be fulfilled by the SCF.", "true", baseUrl,
                     institutionApiKey);
         }
