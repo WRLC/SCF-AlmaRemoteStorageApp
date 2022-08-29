@@ -41,6 +41,7 @@ public class ItemData {
     private String userId;
     private String sourceInstitution;
     private PatronInfo patron;
+    private String requestNote;
 
     public ItemData(String mmsId, String barcode, String institution, String library, String location,
             String networkNumber, String note) {
@@ -154,6 +155,15 @@ public class ItemData {
 	public void setPatron(PatronInfo patron) {
 		this.patron = patron;
 	}
+	
+
+	public String getRequestNote() {
+		return requestNote;
+	}
+
+	public void setRequestNote(String requestNote) {
+		this.requestNote = requestNote;
+	}
 
 	public static ItemData dataFieldToItemData(String mmsId, DataField dataField, String institution, String nZMmsId) {
         String barcode = dataField.getSubfieldsAsString(BARCODE_SUB_FIELD);
@@ -244,6 +254,10 @@ public class ItemData {
             	String address = patronInfoElement.getElementsByTagName("xb:patronAddress").item(0) == null ? null
                         : patronInfoElement.getElementsByTagName("xb:patronAddress").item(0).getTextContent();
             	itemData.setPatron(new PatronInfo(name, identifier, email, address));
+            }
+            
+            if(element.getElementsByTagName("xb:requestNote").getLength() > 0) {
+            	itemData.setRequestNote(element.getElementsByTagName("xb:requestNote").item(0).getTextContent());
             }
             requestDataList.add(itemData);
         }

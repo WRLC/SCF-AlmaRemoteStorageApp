@@ -406,9 +406,14 @@ public class SCFUtil {
         JSONObject jsonRequest = getRequestObj();
         jsonRequest.put("user_primary_id", userId);
         
-        if(itemData.getPatron() != null) {
-        	jsonRequest.put("comment", itemData.getPatron().toString());
+        String comment ="";
+        if(itemData.getRequestNote() != null) {
+        	comment =  itemData.getRequestNote() + " ";
         }
+        if(itemData.getPatron() != null) {
+        	comment += itemData.getPatron().toString();
+        } 
+        jsonRequest.put("comment", comment);
 
         HttpResponse requestResponse = RequestApi.createRequest(mmsId, holdingId, itemPid, baseUrl, remoteStorageApikey,
                 jsonRequest.toString(), userId);
