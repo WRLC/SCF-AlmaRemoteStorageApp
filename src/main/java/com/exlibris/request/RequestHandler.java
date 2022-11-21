@@ -190,7 +190,7 @@ public class RequestHandler {
             }
             String userLinkingId;
             String userSourceInstitution = requestData.getInstitution();
-            if (jsonINSUserObject.has("source_link_id") && jsonINSUserObject.has("source_institution_code")) {
+            if (!JSONObject.NULL.equals(jsonINSUserObject.opt("source_link_id")) && !JSONObject.NULL.equals(jsonINSUserObject.opt("source_institution_code"))) {
                 userLinkingId = jsonINSUserObject.getString("source_link_id");
                 userSourceInstitution = jsonINSUserObject.getString("source_institution_code");
                 jsonUserObject = SCFUtil.getSCFUser(requestData, userLinkingId, userSourceInstitution);
@@ -210,7 +210,7 @@ public class RequestHandler {
                         return true;
                     }
                 }
-            } else if (jsonINSUserObject.has("linking_id")) {
+            } else if (!JSONObject.NULL.equals(jsonINSUserObject.opt("linking_id") )) {
                 userLinkingId = jsonINSUserObject.getString("linking_id");
                 jsonUserObject = SCFUtil.getSCFUser(requestData, userLinkingId, requestData.getInstitution());
             }
@@ -281,7 +281,7 @@ public class RequestHandler {
         }
         String userLinkingId;
         String userSourceInstitution = requestData.getInstitution();
-        if (jsonINSUserObject.has("source_link_id") && jsonINSUserObject.has("source_institution_code")) {
+        if (!JSONObject.NULL.equals(jsonINSUserObject.opt("source_link_id")) && !JSONObject.NULL.equals(jsonINSUserObject.opt("source_institution_code"))) {
             userLinkingId = jsonINSUserObject.getString("source_link_id");
             userSourceInstitution = jsonINSUserObject.getString("source_institution_code");
             jsonUserObject = SCFUtil.getSCFUser(requestData, userLinkingId, userSourceInstitution);
@@ -300,7 +300,7 @@ public class RequestHandler {
                     return true;
                 }
             }
-        } else if (jsonINSUserObject.has("linking_id")) {
+        } else if (!JSONObject.NULL.equals(jsonINSUserObject.opt("linking_id"))) {
             userLinkingId = jsonINSUserObject.getString("linking_id");
             jsonUserObject = SCFUtil.getSCFUser(requestData, userLinkingId, requestData.getInstitution());
         }
