@@ -57,7 +57,7 @@
 		<dependency>
 			<groupId>commons-net</groupId>
 			<artifactId>commons-net</artifactId>
-			<version>3.6</version>
+			<version>3.9.0</version>
 		</dependency>
 		<!-- Utility classes https://commons.apache.org/proper/commons-io/description.html -->
 		<dependency>
