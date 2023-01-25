@@ -730,7 +730,9 @@ public class SCFUtil {
             jsonRequest.put("copyrights_declaration_signed_by_patron",
                     jsonRequestObject.get("copyrights_declaration_signed_by_patron"));
         }
-        jsonRequest.put("description", jsonRequestObject.get("description"));
+        if (jsonRequestObject.has("description")) {
+        	jsonRequest.put("description", jsonRequestObject.get("description"));
+        }
         String comment = "";
         if (jsonRequestObject.has("comment") && !jsonRequestObject.get("comment").equals(null)) {
             comment = jsonRequestObject.getString("comment") + " ";
