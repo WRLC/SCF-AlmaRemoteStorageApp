@@ -1,7 +1,6 @@
 package com.exlibris.util;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -10,9 +9,6 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.marc4j.marc.DataField;
-import org.marc4j.marc.Record;
-import org.marc4j.marc.VariableField;
 
 import com.exlibris.configuration.ConfigurationHandler;
 import com.exlibris.items.ItemData;
@@ -33,30 +29,25 @@ public class SCFUtil {
 
     private static Set<String> locationList = new HashSet<String>();
     
-    public static String getSCFHoldingFromRecordAVA(String record) {
+    public static String getSCFHoldingByMmsID(String mmsId) {
         try {
-            // no AVA fields
-            if (!record.contains("tag=\"AVA\"")) {
-                return null;
-            }
             JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
             String remoteStorageInst = props.getString("remote_storage_inst");
             String remoteStorageHoldingLibrary = props.getString("remote_storage_holding_library");
             String remoteStorageHoldingLocation = props.getString("remote_storage_holding_location");
+            String apiKey = props.getString("remote_storage_apikey");
+            String baseUrl = props.getString("gateway");
+            JSONArray holdings = getSCFHoldingsByBib(mmsId, baseUrl, apiKey);
             JSONArray institutions = props.getJSONArray("institutions");
-            String r = XmlUtil.recordXmlToMarcXml(record);
-            List<Record> Marcrecord = XmlUtil.xmlStringToMarc4jRecords(r);
-            List<VariableField> variableFields = Marcrecord.get(0).getVariableFields("AVA");
-            for (VariableField variableField : variableFields) {
-                String holdingsID = ((DataField) variableField).getSubfieldsAsString("8");
-                String library = ((DataField) variableField).getSubfieldsAsString("b");
-                String location = ((DataField) variableField).getSubfieldsAsString("j");
+            for (int j = 0; j < holdings.length(); j++) {
+                JSONObject holding = holdings.getJSONObject(j);
+                String holdingsID = holding.getString("holding_id");
+                String library =holding.getJSONObject("library").getString("value");
+                String location = holding.getJSONObject("location").getString("value");
                 // if it's the default remote_storage_holding_library
                 // and remote_storage_holding_location
-                if (library.equals(remoteStorageHoldingLibrary)) {
-                    if (location.equals(remoteStorageHoldingLocation)) {
-                        return holdingsID;
-                    }
+                if (library.equals(remoteStorageHoldingLibrary) && location.equals(remoteStorageHoldingLocation)) {
+                    return holdingsID;
                 }
                 // check if one of library locations is in the institution
                 // configuration
@@ -64,7 +55,7 @@ public class SCFUtil {
                     JSONObject inst = institutions.getJSONObject(i);
                     if (inst.get("code").toString().equals(remoteStorageInst)) {
                         JSONArray libraries = inst.getJSONArray("libraries");
-                        for (int j = 0; j < libraries.length(); j++) {
+                        for (int k = 0; k < libraries.length(); k++) {
                             if (library.equals(libraries.getJSONObject(j).get("code").toString())) {
                                 if (libraries.getJSONObject(j).getJSONArray("remote_storage_location").toString()
                                         .contains(location)) {
@@ -1044,15 +1035,7 @@ public class SCFUtil {
 
     private static String getSCFHoldingByBib(String mmsId, String holdingLib, String holdingLoc, String baseUrl,
             String remoteStorageApikey) {
-        logger.debug("get SCF Holdings. MMS Id : " + mmsId);
-        HttpResponse holdingsResponce = HoldingApi.getHoldings(mmsId, baseUrl, remoteStorageApikey);
-        if (holdingsResponce.getResponseCode() != HttpsURLConnection.HTTP_OK) {
-            logger.warn("Can't get SCF Holdings - " + holdingsResponce.getBody());
-            return null;
-        }
-        JSONObject jsonHoldingObject = new JSONObject(holdingsResponce.getBody());
-        JSONArray holdings = jsonHoldingObject.getJSONArray("holding");
-
+        JSONArray holdings = getSCFHoldingsByBib(mmsId, baseUrl, remoteStorageApikey);
         for (int i = 0; i < holdings.length(); i++) {
             try {
                 JSONObject holding = holdings.getJSONObject(i);
@@ -1062,8 +1045,7 @@ public class SCFUtil {
                     return holding.getString("holding_id");
                 }
             } catch (Exception e) {
-                logger.info("Failed getting holding information error: " + e.getMessage() + " Holdings Responce: "
-                        + holdingsResponce.getBody());
+                logger.info("Failed getting holding information error: " + e.getMessage());
             }
         }
         
@@ -1073,6 +1055,19 @@ public class SCFUtil {
         	return holding.getString("holding_id");
         }
         return null;
+    }
+
+    private static JSONArray getSCFHoldingsByBib(String mmsId, String baseUrl,
+            String remoteStorageApikey) {
+        logger.debug("get SCF Holdings. MMS Id : " + mmsId);
+        HttpResponse holdingsResponse = HoldingApi.getHoldings(mmsId, baseUrl, remoteStorageApikey);
+        if (holdingsResponse.getResponseCode() != HttpsURLConnection.HTTP_OK) {
+            logger.warn("Can't get SCF Holdings - " + holdingsResponse.getBody());
+            return null;
+        }
+        JSONObject jsonHoldingObject = new JSONObject(holdingsResponse.getBody());
+
+        return jsonHoldingObject.getJSONArray("holding");
     }
 
 }

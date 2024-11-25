@@ -68,8 +68,7 @@ public class ItemsHandler {
                         logger.debug(
                                 "The Bib exists in the remote Storage - Check for Holding and get Mms Id from exist SCF Bib");
                         mmsId = jsonBibObject.getJSONArray("bib").getJSONObject(0).getString("mms_id");
-                        holdingId = SCFUtil.getSCFHoldingFromRecordAVA(
-                                jsonBibObject.getJSONArray("bib").getJSONObject(0).getJSONArray("anies").getString(0));
+                        holdingId = SCFUtil.getSCFHoldingByMmsID(mmsId);
                     }
                 } else {
                     logger.debug("get matching bib from SCF by NZ");
@@ -98,8 +97,7 @@ public class ItemsHandler {
                         logger.debug(
                                 "The Bib exists in the remote Storage - Check for Holding and get Mms Id from exist SCF Bib");
                         mmsId = jsonBibObject.getJSONArray("bib").getJSONObject(0).getString("mms_id");
-                        holdingId = SCFUtil.getSCFHoldingFromRecordAVA(
-                                jsonBibObject.getJSONArray("bib").getJSONObject(0).getJSONArray("anies").getString(0));
+                        holdingId = SCFUtil.getSCFHoldingByMmsID(mmsId);
                     }
                 }
                 if (holdingId == null) {
