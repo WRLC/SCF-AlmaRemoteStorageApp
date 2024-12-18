@@ -30,6 +30,7 @@ public class SCFUtil {
     private static Set<String> locationList = new HashSet<String>();
     
     public static String getSCFHoldingByMmsID(String mmsId) {
+        logger.debug("get SCF Bib. mmsID : " + mmsId);
         try {
             JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
             String remoteStorageInst = props.getString("remote_storage_inst");
@@ -39,38 +40,44 @@ public class SCFUtil {
             String baseUrl = props.getString("gateway");
             JSONArray holdings = getSCFHoldingsByBib(mmsId, baseUrl, apiKey);
             JSONArray institutions = props.getJSONArray("institutions");
-            for (int j = 0; j < holdings.length(); j++) {
-                JSONObject holding = holdings.getJSONObject(j);
-                String holdingsID = holding.getString("holding_id");
-                String library =holding.getJSONObject("library").getString("value");
-                String location = holding.getJSONObject("location").getString("value");
-                // if it's the default remote_storage_holding_library
-                // and remote_storage_holding_location
-                if (library.equals(remoteStorageHoldingLibrary) && location.equals(remoteStorageHoldingLocation)) {
-                    return holdingsID;
-                }
-                // check if one of library locations is in the institution
-                // configuration
-                for (int i = 0; i < institutions.length(); i++) {
-                    JSONObject inst = institutions.getJSONObject(i);
-                    if (inst.get("code").toString().equals(remoteStorageInst)) {
-                        JSONArray libraries = inst.getJSONArray("libraries");
-                        for (int k = 0; k < libraries.length(); k++) {
-                            if (library.equals(libraries.getJSONObject(j).get("code").toString())) {
-                                if (libraries.getJSONObject(j).getJSONArray("remote_storage_location").toString()
-                                        .contains(location)) {
+            if (holdings != null) {
+                for (int j = 0; j < holdings.length(); j++) {
+                    JSONObject holding = holdings.getJSONObject(j);
+                    String holdingsID = holding.getString("holding_id");
+                    String library =holding.getJSONObject("library").getString("value");
+                    String location = holding.getJSONObject("location").getString("value");
+                    // if it's the default remote_storage_holding_library
+                    // and remote_storage_holding_location
+                    if (library.equals(remoteStorageHoldingLibrary) && location.equals(remoteStorageHoldingLocation)) {
+                        logger.debug("found holding for mmsId : " + mmsId + " holding id : " + holdingsID + " library : "
+                                + library + " location : " + location);
+                        return holdingsID;
+                    }
+                    // check if one of library locations is in the institution
+                    // configuration
+                    for (int i = 0; i < institutions.length(); i++) {
+                        JSONObject inst = institutions.getJSONObject(i);
+                        if (inst.get("code").toString().equals(remoteStorageInst)) {
+                            JSONArray libraries = inst.getJSONArray("libraries");
+                            for (int k = 0; k < libraries.length(); k++) {
+                                JSONObject lib = libraries.getJSONObject(k);
+                                logger.info("checking institution : " + inst.getString("code") +", library : " + lib.getString("code"));
+                                if (library.equals(lib.getString("code")) && lib.getJSONArray("remote_storage_location").toString().contains(location)) {
+                                    logger.debug("found holding for mmsId : " + mmsId + " holding id : " + holdingsID + " library : "
+                                            + library + " location : " + location);
                                     return holdingsID;
                                 }
                             }
+                            // only one institution can be equal
+                            break;
                         }
-                        // only one institution can be equal
-                        break;
                     }
                 }
             }
         } catch (Exception e) {
             return null;
         }
+        logger.debug("cant find holding for mmsId : " + mmsId);
         return null;
     }
 
