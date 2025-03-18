@@ -35,7 +35,6 @@ public class SCFUtil {
             JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
             String remoteStorageInst = props.getString("remote_storage_inst");
             String remoteStorageHoldingLibrary = props.getString("remote_storage_holding_library");
-            String remoteStorageHoldingLocation = props.getString("remote_storage_holding_location");
             String apiKey = props.getString("remote_storage_apikey");
             String baseUrl = props.getString("gateway");
             JSONArray holdings = getSCFHoldingsByBib(mmsId, baseUrl, apiKey);
@@ -46,11 +45,12 @@ public class SCFUtil {
                     String holdingsID = holding.getString("holding_id");
                     String library =holding.getJSONObject("library").getString("value");
                     String location = holding.getJSONObject("location").getString("value");
+                    logger.debug("holding ("+ j + ") mmsId : " + mmsId + " holding id : " + holdingsID + " library : "
+                            + library + " location : " + location);
                     // if it's the default remote_storage_holding_library
-                    // and remote_storage_holding_location
-                    if (library.equals(remoteStorageHoldingLibrary) && location.equals(remoteStorageHoldingLocation)) {
+                    if (library.equals(remoteStorageHoldingLibrary)) {
                         logger.debug("found holding for mmsId : " + mmsId + " holding id : " + holdingsID + " library : "
-                                + library + " location : " + location);
+                                + library);
                         return holdingsID;
                     }
                     // check if one of library locations is in the institution
