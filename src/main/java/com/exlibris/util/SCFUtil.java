@@ -28,8 +28,8 @@ public class SCFUtil {
     final private static String HOL_XML_TEMPLATE = "<holding><record><datafield ind1=\"0\" ind2=\" \" tag=\"852\"><subfield code=\"b\">_LIB_CODE_</subfield><subfield code=\"c\">_LOC_CODE_</subfield></datafield></record><suppress_from_publishing>false</suppress_from_publishing></holding>";
 
     private static Set<String> locationList = new HashSet<String>();
-    
-    public static String getSCFHoldingByMmsID(String mmsId) {
+
+    public static String getSCFHoldingByMmsID(String mmsId, String itemDataLocation) {
         logger.debug("get SCF Bib. mmsID : " + mmsId);
         try {
             JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
@@ -43,12 +43,13 @@ public class SCFUtil {
                 for (int j = 0; j < holdings.length(); j++) {
                     JSONObject holding = holdings.getJSONObject(j);
                     String holdingsID = holding.getString("holding_id");
-                    String library =holding.getJSONObject("library").getString("value");
+                    String library = holding.getJSONObject("library").getString("value");
                     String location = holding.getJSONObject("location").getString("value");
-                    logger.debug("holding ("+ j + ") mmsId : " + mmsId + " holding id : " + holdingsID + " library : "
+                    logger.debug("holding (" + j + ") mmsId : " + mmsId + " holding id : " + holdingsID + " library : "
                             + library + " location : " + location);
                     // if it's the default remote_storage_holding_library
-                    if (library.equals(remoteStorageHoldingLibrary)) {
+                    // and the item location is the same as the holding location
+                    if (library.equals(remoteStorageHoldingLibrary) && location.equals(itemDataLocation)) {
                         logger.debug("found holding for mmsId : " + mmsId + " holding id : " + holdingsID + " library : "
                                 + library);
                         return holdingsID;
@@ -61,7 +62,7 @@ public class SCFUtil {
                             JSONArray libraries = inst.getJSONArray("libraries");
                             for (int k = 0; k < libraries.length(); k++) {
                                 JSONObject lib = libraries.getJSONObject(k);
-                                logger.info("checking institution : " + inst.getString("code") +", library : " + lib.getString("code"));
+                                logger.info("checking institution : " + inst.getString("code") + ", library : " + lib.getString("code"));
                                 if (library.equals(lib.getString("code")) && lib.getJSONArray("remote_storage_location").toString().contains(location)) {
                                     logger.debug("found holding for mmsId : " + mmsId + " holding id : " + holdingsID + " library : "
                                             + library + " location : " + location);
