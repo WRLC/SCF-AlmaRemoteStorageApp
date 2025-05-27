@@ -7,12 +7,17 @@
 	<name>Alma Remote Storage App</name>
 
 	<dependencies>
-		<!-- https://mvnrepository.com/artifact/com.sun.istack/istack-commons-runtime -->
+		<dependency>
+			<groupId>com.microsoft.azure</groupId>
+			<artifactId>applicationinsights-web</artifactId>
+			<version>3.6.1</version>
+		</dependency>
 		<dependency>
 			<groupId>com.microsoft.azure</groupId>
 			<artifactId>applicationinsights-logging-log4j1_2</artifactId>
 			<version>2.6.4</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.sun.istack/istack-commons-runtime -->
 		<dependency>
 			<groupId>com.sun.istack</groupId>
 			<artifactId>istack-commons-runtime</artifactId>
@@ -81,11 +86,6 @@
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.1.0</version>
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>applicationinsights-web</artifactId>
-			<version>3.6.1</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.marc4j/marc4j -->
 		<dependency>
