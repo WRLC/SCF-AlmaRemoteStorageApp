@@ -1,13 +1,13 @@
 name: Java CI with Maven (PSB)
 
 env:
-  AZURE_WEBAPP_NAME: wrlc-alma-remote-storage-app-psb
+  AZURE_WEBAPP_NAME: scf-remote-storage-app
   JAVA_VERSION: '11'
   DISTRIBUTION: 'zulu'
 
 on:
   push:
-    branches: [ "master"]
+    branches: [ "main"]
 
 jobs:
   build:
