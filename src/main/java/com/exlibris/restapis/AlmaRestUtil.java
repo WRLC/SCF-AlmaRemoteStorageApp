@@ -119,7 +119,7 @@ public class AlmaRestUtil {
 
             return responseObj;
         } catch (Exception e) {
-            e.printStackTrace();
+			logger.error("Failed getting HttpResponse : " + e.getMessage(),e);
             return null;
         }
     }
