@@ -27,7 +27,7 @@ public class AlmaRestUtil {
     	int code = HttpsURLConnection.HTTP_INTERNAL_ERROR;
         while (code >= HttpsURLConnection.HTTP_INTERNAL_ERROR && code < ERROR_WINHTTP_SECURE_FAILURE
                 && code != PER_SECOND_THRESHOLD) {
-                httpResponse = sendReq(url,method, body);
+                httpResponse = sendReq(url,method, body, counter);
                 if (httpResponse != null) {
                     code = httpResponse.getResponseCode();
                 }
@@ -50,14 +50,17 @@ public class AlmaRestUtil {
     }
     
 
-    public static HttpResponse sendReq(String url, String method, String body) {
-        logger.info("Sending " + method + " request to URL : " + url.replaceAll("apikey=.*", "apikey=notOnLog....")
-                + url.substring(url.length() - 4));
+    public static HttpResponse sendReq(String url, String method, String body, int retry) {
+		if(retry > 0 ){
+			url = url + (url.contains("?") ? "&" : "?") + "retry=" + retry;
+		}
+		String maskedUrl = url.replaceAll("(apikey=)([^&]{0,})([^&]{4})(?=(&|$))", "$1notOnLog....$3");
+		logger.info("Sending " + method + " request to URL : " + maskedUrl);
         try {
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             con.setRequestMethod(method);
-            con.setConnectTimeout(5000); //set timeout to 5 seconds
+            con.setConnectTimeout(20000); //set timeout to 20 seconds
             con.setReadTimeout(500000);
             con.setRequestProperty("Accept", "application/json");
             if (body != null) {
