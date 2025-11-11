@@ -378,4 +378,82 @@ public class RequestHandler {
         SCFUtil.cancelRequest(requestData);
     }
 
+    public static boolean createSystemUserDigitizationItemRequest(ItemData requestData, String requestSubType) {
+        try {
+            logger.info("Create System User Digitization Item Request (" + requestSubType + "). Barcode: " + requestData.getBarcode());
+
+            JSONObject jsonRequestObject = SCFUtil.getINSRequest(requestData);
+            if (jsonRequestObject == null) {
+                String message = "Can't get institution : " + requestData.getInstitution()
+                        + " Requests. Failed to create System User Digitization Item Request. Barcode: " + requestData.getBarcode();
+                logger.error(message);
+                ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                        requestData.getInstitution(), message);
+                return false;
+            }
+
+            JSONObject jsonItemObject = SCFUtil.getSCFItem(requestData);
+            if (jsonItemObject == null) {
+                String message = "Failed to create System User Digitization Item Request. Barcode: " + requestData.getBarcode();
+                logger.error(message);
+                ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                        requestData.getInstitution(), message);
+                return false;
+            }
+
+            JSONObject jsonDigitizationRequestObject = SCFUtil.createSCFSystemUserDigitizationRequest(
+                    jsonRequestObject, jsonItemObject, requestData, requestSubType);
+
+            if (jsonDigitizationRequestObject != null) {
+                SCFUtil.cancelTitleRequest(requestData);
+                return true;
+            }
+            return false;
+
+        } catch (Exception e) {
+            String message = "Create System User Digitization Item Request Failed. Barcode: " + requestData.getBarcode();
+            logger.warn(message + " " + e.getMessage());
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
+            return false;
+        }
+    }
+
+
+    public static boolean createSystemUserDigitizationTitleRequest(ItemData requestData, String requestSubType) {
+        logger.info("Create System User Digitization Title Request (" + requestSubType + "). Request Id: " + requestData.getRequestId());
+
+        JSONObject jsonRequestObject = SCFUtil.getINSUserRequest(requestData);
+        if (jsonRequestObject == null) {
+            String message = "Can't get institution User Requests - Failed to create System User Digitization Title Request. Request Id: "
+                    + requestData.getRequestId();
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
+            logger.error(message);
+            return false;
+        }
+
+        requestData.setMmsId(jsonRequestObject.getString("mms_id"));
+
+        JSONObject jsonBibObject = getSCFBibByInstMmsId(requestData);
+        if (jsonBibObject == null) {
+            String message = "Failed to create System User Digitization Title Request. Request Id: " + requestData.getRequestId()
+                    + " Can't get institution : " + requestData.getInstitution()
+                    + " Bib - Create Request Failed. Mms Id : " + requestData.getMmsId();
+            ReportUtil.getInstance().appendReport("RequestHandler", requestData.getBarcode(),
+                    requestData.getInstitution(), message);
+            logger.error(message);
+            return false;
+        }
+
+        JSONObject jsonDigitizationRequestObject = SCFUtil.createSCFSystemUserDigitizationUserRequest(
+                jsonRequestObject, jsonBibObject, requestData, requestSubType);
+
+        if (jsonDigitizationRequestObject != null) {
+            SCFUtil.cancelTitleRequest(requestData);
+            return true;
+        }
+        return false;
+    }
+
 }
