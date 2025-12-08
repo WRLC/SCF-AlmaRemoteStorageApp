@@ -63,20 +63,36 @@ public class RequestsMain {
                 for (ItemData request : requestList) {
                     boolean success = false;
                     try {
+                        String requestType = request.getRequestType();
+
+                        // Title/Bib level requests (no barcode or barcode with spaces/colons)
                         if (request.getBarcode().contains(" ") || request.getBarcode().contains(":")) {
-                            if (request.getUserId() != null
-                                    && request.getRequestType().equals("PHYSICAL_TO_DIGITIZATION")) {
+                            if (requestType.equals("PHYSICAL_TO_DIGITIZATION") && request.getUserId() != null) {
+                                // Patron digitization request (with real user)
                                 success = RequestHandler.createDigitizationUserRequest(request);
+                            } else if (requestType.equals("STAFF_PHYSICAL_DIGITIZATION") || requestType.equals("RESOURCE_SHARING_P2D_SHIPMENT")) {
+                                // System user digitization request (no real patron)
+                                success = RequestHandler.createSystemUserDigitizationTitleRequest(request, requestType);
                             } else {
+                                // Other title-level requests
                                 success = RequestHandler.createBibRequest(request);
                             }
-                        } else if (request.getBarcode() != null && !request.getBarcode().isEmpty()) {
-                            if (request.getRequestType().equals("PHYSICAL_TO_DIGITIZATION")) {
+                        }
+                        // Item level requests (with valid barcode)
+                        else if (request.getBarcode() != null && !request.getBarcode().isEmpty()) {
+                            if (requestType.equals("PHYSICAL_TO_DIGITIZATION")) {
+                                // Patron digitization item request (with real user)
                                 success = RequestHandler.createDigitizationItemRequest(request);
+                            } else if (requestType.equals("STAFF_PHYSICAL_DIGITIZATION") || requestType.equals("RESOURCE_SHARING_P2D_SHIPMENT")) {
+                                // System user digitization item request (no real patron)
+                                success = RequestHandler.createSystemUserDigitizationItemRequest(request, requestType);
                             } else {
+                                // Other item-level requests
                                 success = RequestHandler.createItemRequest(request);
                             }
-                        } else {
+                        }
+                        // Fallback to bib request
+                        else {
                             success = RequestHandler.createBibRequest(request);
                         }
                     } catch (Exception e) {

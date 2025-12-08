@@ -411,7 +411,11 @@ public class SCFUtil {
         }
         if(itemData.getPatron() != null) {
         	comment += itemData.getPatron().toString();
-        } 
+        }
+        comment += " || request type: " + jsonRequest.getJSONObject("request_sub_type").get("desc");
+        if(itemData.getRequestId() != null){
+            comment += " || Internal identifier: " + itemData.getRequestId();
+        }
         jsonRequest.put("comment", comment);
 
         HttpResponse requestResponse = RequestApi.createRequest(mmsId, holdingId, itemPid, baseUrl, remoteStorageApikey,
@@ -454,6 +458,10 @@ public class SCFUtil {
         comment += "The inventory for this request should come from " + itemData.getSourceInstitution()+". ";
         if(itemData.getPatron() != null) {
         	comment += itemData.getPatron().toString();
+        }
+        comment += " || request type: " + jsonRequest.getJSONObject("request_sub_type").get("desc");
+        if(itemData.getRequestId() != null){
+            comment += " || Internal identifier: " + itemData.getRequestId();
         }
         if (jsonRequestObject != null) {
             if (itemData.getDescription() == null && jsonRequestObject.has("description")) {
@@ -693,10 +701,11 @@ public class SCFUtil {
 
     }
 
-    private static JSONObject getDigitizationRequestObj() {
+    private static JSONObject getDigitizationRequestObj(String subTypeValue, String subTypeDesc) {
         JSONObject jsonRequest = new JSONObject();
         jsonRequest.put("request_type", "DIGITIZATION");
         JSONObject jsonRequestSubType = new JSONObject();
+        // save requests as physical to digitization
         jsonRequestSubType.put("value", "PHYSICAL_TO_DIGITIZATION");
         jsonRequestSubType.put("desc", "Patron digitization request");
         jsonRequest.put("request_sub_type", jsonRequestSubType);
@@ -711,8 +720,14 @@ public class SCFUtil {
 
     public static JSONObject createSCFDigitizationRequest(JSONObject jsonUserObject, JSONObject jsonRequestObject,
             JSONObject jsonItemObject, ItemData requestData) {
+        return createSCFDigitizationRequest(jsonUserObject, jsonRequestObject, jsonItemObject, requestData,
+                "PHYSICAL_TO_DIGITIZATION", "Patron digitization request");
+    }
 
-        logger.debug("create SCF Digitization Request. Barcode: "
+    private static JSONObject createSCFDigitizationRequest(JSONObject jsonUserObject, JSONObject jsonRequestObject,
+            JSONObject jsonItemObject, ItemData requestData, String subTypeValue, String subTypeDesc) {
+
+        logger.debug("create SCF Digitization Request (" + subTypeValue + "). Barcode: "
                 + jsonItemObject.getJSONObject("item_data").getString("barcode"));
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
@@ -723,7 +738,7 @@ public class SCFUtil {
         String holdingId = jsonItemObject.getJSONObject("holding_data").getString("holding_id");
         String itemPid = jsonItemObject.getJSONObject("item_data").getString("pid");
 
-        JSONObject jsonRequest = getDigitizationRequestObj();
+        JSONObject jsonRequest = getDigitizationRequestObj(subTypeValue, subTypeDesc);
         jsonRequest.put("user_primary_id", primaryId);
         if (jsonRequestObject.has("copyrights_declaration_signed_by_patron")) {
             jsonRequest.put("copyrights_declaration_signed_by_patron",
@@ -739,6 +754,16 @@ public class SCFUtil {
         comment += "The inventory for this request should come from " + requestData.getSourceInstitution()+". ";
         if(requestData.getPatron() != null) {
         	comment += requestData.getPatron().toString();
+        }
+        comment += " || request type: " + subTypeDesc;
+        if(requestData.getPatron() != null) {
+            comment += requestData.getPatron().toString();
+        }
+        if(jsonRequestObject.get("volume") != null && !jsonRequestObject.get("volume").equals("")){
+            comment += " || volume: " + jsonRequestObject.get("volume");
+        }
+        if(jsonRequestObject.get("issue") != null && !jsonRequestObject.get("issue").equals("")){
+            comment += " || issue: " + jsonRequestObject.get("issue");
         }
         jsonRequest.put("partial_digitization", jsonRequestObject.get("partial_digitization"));
         if (jsonRequestObject.has("required_pages_range")) {
@@ -868,7 +893,13 @@ public class SCFUtil {
 
     public static JSONObject createSCFDigitizationUserRequest(JSONObject jsonUserObject, JSONObject jsonRequestObject,
             JSONObject jsonBibObject, ItemData requestData) {
-        logger.debug("create SCF Digitization Request. User Id: " + jsonUserObject.getString("primary_id"));
+        return createSCFDigitizationUserRequest(jsonUserObject, jsonRequestObject, jsonBibObject, requestData,
+                "PHYSICAL_TO_DIGITIZATION", "Patron digitization request");
+    }
+
+    private static JSONObject createSCFDigitizationUserRequest(JSONObject jsonUserObject, JSONObject jsonRequestObject,
+            JSONObject jsonBibObject, ItemData requestData, String subTypeValue, String subTypeDesc) {
+        logger.debug("create SCF Digitization Request (" + subTypeValue + "). User Id: " + jsonUserObject.getString("primary_id"));
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
         String baseUrl = props.get("gateway").toString();
@@ -881,7 +912,7 @@ public class SCFUtil {
             mmsId = jsonBibObject.getString("mms_id");
         }
 
-        JSONObject jsonRequest = getDigitizationRequestObj();
+        JSONObject jsonRequest = getDigitizationRequestObj(subTypeValue, subTypeDesc);
         jsonRequest.put("user_primary_id", primaryId);
         if (jsonRequestObject.has("copyrights_declaration_signed_by_patron")) {
             jsonRequest.put("copyrights_declaration_signed_by_patron",
@@ -895,6 +926,16 @@ public class SCFUtil {
         comment += "The inventory for this request should come from " + requestData.getSourceInstitution()+". ";
         if(requestData.getPatron() != null) {
         	comment += requestData.getPatron().toString();
+        }
+        comment += " || request type: " + subTypeDesc;
+        if(requestData.getRequestId() != null){
+            comment += " || Internal identifier: " + requestData.getRequestId();
+        }
+        if(jsonRequestObject.get("volume") != null){
+            comment += " || volume: " + jsonRequestObject.get("volume");
+        }
+        if(jsonRequestObject.get("issue") != null){
+            comment += " || issue: " + jsonRequestObject.get("issue");
         }
         jsonRequest.put("partial_digitization", jsonRequestObject.get("partial_digitization"));
         if (jsonRequestObject.has("required_pages_range")) {
@@ -976,6 +1017,52 @@ public class SCFUtil {
         }
         JSONObject jsonRequestsObject = new JSONObject(requestsResponce.getBody());
         return jsonRequestsObject;
+    }
+
+
+    private static JSONObject createSystemUserObject(ItemData requestData) {
+        String systemUserId = getUserIdByIns(requestData);
+        JSONObject userObject = new JSONObject();
+        userObject.put("primary_id", systemUserId);
+        return userObject;
+    }
+
+    /**
+     * Helper method to get description for request sub-type.
+     */
+    private static String getDescriptionForRequestSubType(String requestSubType) {
+        switch (requestSubType) {
+            case "STAFF_PHYSICAL_DIGITIZATION":
+                return "Staff digitization request";
+            case "RESOURCE_SHARING_P2D_SHIPMENT":
+                return "Resource sharing Ship digitally request";
+            case "PHYSICAL_TO_DIGITIZATION":
+                return "Patron digitization request";
+            default:
+                return "Digitization request";
+        }
+    }
+
+
+    public static JSONObject createSCFSystemUserDigitizationRequest(JSONObject jsonRequestObject,
+            JSONObject jsonItemObject, ItemData requestData, String requestSubType) {
+
+        JSONObject systemUserObject = createSystemUserObject(requestData);
+
+        return createSCFDigitizationRequest(systemUserObject, jsonRequestObject, jsonItemObject, requestData,
+                requestSubType, getDescriptionForRequestSubType(requestSubType));
+    }
+
+
+    public static JSONObject createSCFSystemUserDigitizationUserRequest(JSONObject jsonRequestObject,
+            JSONObject jsonBibObject, ItemData requestData, String requestSubType) {
+
+        // Create a system user object (just contains primary_id = INSTITUTION-LIBRARY)
+        JSONObject systemUserObject = createSystemUserObject(requestData);
+
+        // Reuse existing method with custom sub-type
+        return createSCFDigitizationUserRequest(systemUserObject, jsonRequestObject, jsonBibObject, requestData,
+                requestSubType, getDescriptionForRequestSubType(requestSubType));
     }
 
     public static String getDefaultLibrary(String institution) {

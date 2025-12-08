@@ -209,7 +209,8 @@ public class ItemData {
                 library = element.getElementsByTagName("xb:libraryCode").item(0) == null ? null
                         : element.getElementsByTagName("xb:libraryCode").item(0).getTextContent();
             }
-            if (library == null && libraryInstitution.equals(institution) && !type.equals("PHYSICAL_TO_DIGITIZATION")) {
+            if (library == null && libraryInstitution.equals(institution) && !type.equals("PHYSICAL_TO_DIGITIZATION") &&
+                    !type.equals("STAFF_PHYSICAL_DIGITIZATION") && !type.equals("RESOURCE_SHARING_P2D_SHIPMENT")) {
                 String libraryName = null;
                 try {
                     libraryName = ((Element) element.getElementsByTagName("xb:pickup").item(0))
@@ -230,7 +231,8 @@ public class ItemData {
             itemData.setRequestId(id);
             itemData.setSourceInstitution(institution);
 
-            if (type.equals("PHYSICAL_TO_DIGITIZATION")) {
+            if (type.equals("PHYSICAL_TO_DIGITIZATION") || type.equals("STAFF_PHYSICAL_DIGITIZATION") ||
+                    type.equals("RESOURCE_SHARING_P2D_SHIPMENT")) {
                 itemData.setInstitution(institution);
             }
             if (mmsId == null || "PHYSICAL_TO_DIGITIZATION".equals(type)) {
@@ -242,6 +244,8 @@ public class ItemData {
                     logger.debug("can't get patronIdentifier, " + e.getMessage());
                 }
             }
+            // Note: STAFF_PHYSICAL_DIGITIZATION requests do not include userId
+            // as they are staff-initiated and do not require patron information
             // Include requester information in physical item requests
             if (element.getElementsByTagName("xb:patronInfo").item(0) != null) {
             	Element patronInfoElement = (Element) element.getElementsByTagName("xb:patronInfo").item(0);
