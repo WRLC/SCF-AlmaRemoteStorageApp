@@ -392,19 +392,19 @@ public class SCFUtil {
         return jsonItemObject;
     }
 
-    public static HttpResponse createSCFRequest(JSONObject jsonItemObject, ItemData itemData) {
-        logger.debug("create SCF Request. Barcode: " + jsonItemObject.getJSONObject("item_data").getString("barcode"));
+    public static HttpResponse createSCFRequest(JSONObject scfItemRecord, ItemData itemData) {
+        logger.debug("create SCF Request. Barcode: " + scfItemRecord.getJSONObject("item_data").getString("barcode"));
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
         String remoteStorageApikey = props.get("remote_storage_apikey").toString();
         String baseUrl = props.get("gateway").toString();
 
-        String mmsId = jsonItemObject.getJSONObject("bib_data").getString("mms_id");
-        String holdingId = jsonItemObject.getJSONObject("holding_data").getString("holding_id");
-        String itemPid = jsonItemObject.getJSONObject("item_data").getString("pid");
+        String mmsId = scfItemRecord.getJSONObject("bib_data").getString("mms_id");
+        String holdingId = scfItemRecord.getJSONObject("holding_data").getString("holding_id");
+        String itemPid = scfItemRecord.getJSONObject("item_data").getString("pid");
         String userId = getUserIdByIns(itemData);
-        JSONObject jsonRequest = getRequestObj();
-        jsonRequest.put("user_primary_id", userId);
-        
+        JSONObject newRequestObj = getRequestObj();
+        newRequestObj.put("user_primary_id", userId);
+
         String comment ="";
         if(itemData.getRequestNote() != null) {
         	comment =  itemData.getRequestNote() + " ";
@@ -412,14 +412,18 @@ public class SCFUtil {
         if(itemData.getPatron() != null) {
         	comment += itemData.getPatron().toString();
         }
-        comment += " || request type: " + jsonRequest.getJSONObject("request_sub_type").get("desc");
+        // Use original request type if available, otherwise use the new request's type
+        String requestTypeDesc = (itemData.getRequestType() != null && !itemData.getRequestType().isEmpty())
+            ? itemData.getRequestType()
+            : newRequestObj.getJSONObject("request_sub_type").get("desc").toString();
+        comment += " || request type: " + requestTypeDesc;
         if(itemData.getRequestId() != null){
             comment += " || Internal identifier: " + itemData.getRequestId();
         }
-        jsonRequest.put("comment", comment);
+        newRequestObj.put("comment", comment);
 
         HttpResponse requestResponse = RequestApi.createRequest(mmsId, holdingId, itemPid, baseUrl, remoteStorageApikey,
-                jsonRequest.toString(), userId);
+                newRequestObj.toString(), userId);
         if (requestResponse.getResponseCode() != HttpsURLConnection.HTTP_OK) {
             String message = "Can't create SCF request. Item Pid : " + itemPid + "." + requestResponse.getBody();
             logger.error(message);
@@ -433,13 +437,13 @@ public class SCFUtil {
         return requestResponse;
     }
 
-    public static HttpResponse createSCFBibRequest(JSONObject jsonBibObject, JSONObject jsonRequestObject,
+    public static HttpResponse createSCFBibRequest(JSONObject scfBibRecord, JSONObject originalRequest,
             ItemData itemData) {
         String mmsId = null;
         try {
-            mmsId = jsonBibObject.getJSONArray("bib").getJSONObject(0).getString("mms_id");
+            mmsId = scfBibRecord.getJSONArray("bib").getJSONObject(0).getString("mms_id");
         } catch (Exception e) {
-            mmsId = jsonBibObject.getString("mms_id");
+            mmsId = scfBibRecord.getString("mms_id");
         }
         logger.debug("create SCF Request. Bib: " + mmsId);
         JSONObject props = ConfigurationHandler.getInstance().getConfiguration();
@@ -448,55 +452,55 @@ public class SCFUtil {
 
         String userId = getUserIdByIns(itemData);
 
-        JSONObject jsonRequest = getRequestObj();
-        jsonRequest.put("user_primary_id", userId);
-        jsonRequest.put("description", itemData.getDescription());
+        JSONObject newRequestObj = getRequestObj();
+        newRequestObj.put("user_primary_id", userId);
+        newRequestObj.put("description", itemData.getDescription());
         String comment = "";
-        if (jsonRequestObject.has("comment") && !jsonRequestObject.get("comment").equals(null)) {
-            comment += jsonRequestObject.getString("comment") + " ";
+        if (originalRequest.has("comment") && !originalRequest.get("comment").equals(null)) {
+            comment += originalRequest.getString("comment") + " ";
         }
         comment += "The inventory for this request should come from " + itemData.getSourceInstitution()+". ";
         if(itemData.getPatron() != null) {
         	comment += itemData.getPatron().toString();
         }
-        comment += " || request type: " + jsonRequest.getJSONObject("request_sub_type").get("desc");
+        comment += " || request type: " + originalRequest.getJSONObject("request_sub_type").get("desc");
         if(itemData.getRequestId() != null){
             comment += " || Internal identifier: " + itemData.getRequestId();
         }
-        if (jsonRequestObject != null) {
-            if (itemData.getDescription() == null && jsonRequestObject.has("description")) {
-                jsonRequest.put("description", jsonRequestObject.get("description"));
+        if (originalRequest != null) {
+            if (itemData.getDescription() == null && originalRequest.has("description")) {
+                newRequestObj.put("description", originalRequest.get("description"));
             }
-            if (jsonRequestObject.has("manual_description") && !jsonRequestObject.get("manual_description").equals(null)
-                    && !jsonRequestObject.get("manual_description").equals("")) {
+            if (originalRequest.has("manual_description") && !originalRequest.get("manual_description").equals(null)
+                    && !originalRequest.get("manual_description").equals("")) {
                 String holdingLib = props.get("remote_storage_holding_library").toString();
                 String holdingLoc = props.get("remote_storage_holding_location").toString();
                 String holdingId = getSCFHoldingByBib(mmsId, holdingLib, holdingLoc, baseUrl, remoteStorageApikey);
                 if (holdingId != null) {
-                    jsonRequest.put("manual_description", jsonRequestObject.get("manual_description"));
-                    jsonRequest.put("holding_id", holdingId);
+                    newRequestObj.put("manual_description", originalRequest.get("manual_description"));
+                    newRequestObj.put("holding_id", holdingId);
                 } else {
-                    comment += " " + jsonRequestObject.get("manual_description");
+                    comment += " " + originalRequest.get("manual_description");
                 }
             }
-            if (jsonRequestObject.has("volume")) {
-                jsonRequest.put("volume", jsonRequestObject.get("volume"));
+            if (originalRequest.has("volume")) {
+                newRequestObj.put("volume", originalRequest.get("volume"));
             }
-            if (jsonRequestObject.has("issue")) {
-                jsonRequest.put("issue", jsonRequestObject.get("issue"));
+            if (originalRequest.has("issue")) {
+                newRequestObj.put("issue", originalRequest.get("issue"));
             }
-            if (jsonRequestObject.has("part")) {
-                jsonRequest.put("part", jsonRequestObject.get("part"));
+            if (originalRequest.has("part")) {
+                newRequestObj.put("part", originalRequest.get("part"));
             }
-            if (jsonRequestObject.has("date_of_publication")) {
-                jsonRequest.put("date_of_publication", jsonRequestObject.get("date_of_publication"));
+            if (originalRequest.has("date_of_publication")) {
+                newRequestObj.put("date_of_publication", originalRequest.get("date_of_publication"));
             }
 
         }
-        comment += " {Source Request " + itemData.getSourceInstitution()+"-" + jsonRequestObject.get("request_id") + "-"  +jsonRequestObject.get("user_primary_id") +"}";
-        jsonRequest.put("comment", comment);
+        comment += " {Source Request " + itemData.getSourceInstitution()+"-" + originalRequest.get("request_id") + "-"  +originalRequest.get("user_primary_id") +"}";
+        newRequestObj.put("comment", comment);
         HttpResponse requestResponse = RequestApi.createBibRequest(mmsId, baseUrl, remoteStorageApikey,
-                jsonRequest.toString(), userId);
+                newRequestObj.toString(), userId);
         return requestResponse;
 
     }
