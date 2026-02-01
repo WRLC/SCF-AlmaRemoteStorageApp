@@ -405,7 +405,7 @@ public class RequestHandler {
                     jsonRequestObject, jsonItemObject, requestData, requestSubType);
 
             if (jsonDigitizationRequestObject != null) {
-                SCFUtil.cancelTitleRequest(requestData);
+                //SCFUtil.cancelTitleRequest(requestData);
                 return true;
             }
             return false;
@@ -450,7 +450,7 @@ public class RequestHandler {
                 jsonRequestObject, jsonBibObject, requestData, requestSubType);
 
         if (jsonDigitizationRequestObject != null) {
-            SCFUtil.cancelTitleRequest(requestData);
+            //SCFUtil.cancelTitleRequest(requestData);
             return true;
         }
         return false;
