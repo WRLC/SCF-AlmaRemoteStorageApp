@@ -63,7 +63,8 @@ public class SCFUtil {
                             for (int k = 0; k < libraries.length(); k++) {
                                 JSONObject lib = libraries.getJSONObject(k);
                                 logger.info("checking institution : " + inst.getString("code") + ", library : " + lib.getString("code"));
-                                if (library.equals(lib.getString("code")) && lib.getJSONArray("remote_storage_location").toString().contains(location)) {
+                                JSONArray remoteStorageLocations = lib.optJSONArray("remote_storage_location");
+                                if (library.equals(lib.getString("code")) && remoteStorageLocations != null && remoteStorageLocations.toString().contains(location)) {
                                     logger.debug("found holding for mmsId : " + mmsId + " holding id : " + holdingsID + " library : "
                                             + library + " location : " + location);
                                     return holdingsID;
@@ -76,6 +77,8 @@ public class SCFUtil {
                 }
             }
         } catch (Exception e) {
+            logger.warn("Failed to resolve SCF holding for mmsId: " + mmsId + ", item location: " + itemDataLocation
+                    + ". Returning null and allowing holding creation path.", e);
             return null;
         }
         logger.debug("cant find holding for mmsId : " + mmsId);
